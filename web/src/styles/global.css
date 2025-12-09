@@ -1,0 +1,282 @@
+@import "tailwindcss";
+
+/* Araptus Brand Theme - Official Purple #570df8 */
+@theme {
+  /* Core brand colors - from araptus.com */
+  --color-araptus: #570df8;
+  --color-araptus-dark: #4506cb;
+  --color-araptus-light: #7c3aed;
+  --color-araptus-glow: #a78bfa;
+  
+  /* Background colors */
+  --color-void: #0f0a1a;
+  --color-obsidian: #1a1025;
+  --color-slate-dark: #2d2440;
+  --color-slate-mid: #453a5c;
+  --color-slate-light: #5c4f75;
+  
+  /* Accent & status colors */
+  --color-accent: #570df8;
+  --color-accent-light: #a78bfa;
+  --color-alert: #ef4444;
+  --color-warning: #f59e0b;
+  --color-info: #06b6d4;
+  --color-safe: #10b981;
+  
+  /* Text colors */
+  --color-text-primary: #f5f3ff;
+  --color-text-secondary: #c4b5fd;
+  --color-text-muted: #8b7fad;
+  
+  /* Fonts */
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Monaco, monospace;
+  --font-display: "Inter", system-ui, sans-serif;
+}
+
+/* Base styles */
+html {
+  background: var(--color-void);
+  color: var(--color-text-primary);
+  font-family: var(--font-display);
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background: 
+    radial-gradient(ellipse at 0% 0%, rgba(87, 13, 248, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 100%, rgba(124, 58, 237, 0.08) 0%, transparent 50%),
+    var(--color-void);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-obsidian);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-slate-mid);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-slate-light);
+}
+
+/* Glow effects */
+.glow-accent {
+  box-shadow: 0 0 20px rgba(87, 13, 248, 0.4), 0 0 40px rgba(87, 13, 248, 0.2);
+}
+
+.glow-alert {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3), 0 0 40px rgba(239, 68, 68, 0.1);
+}
+
+.glow-safe {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3), 0 0 40px rgba(16, 185, 129, 0.1);
+}
+
+/* Text glow */
+.text-glow-accent {
+  text-shadow: 0 0 20px rgba(87, 13, 248, 0.6);
+}
+
+/* Animations */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Card styles */
+.card {
+  background: linear-gradient(135deg, var(--color-obsidian) 0%, rgba(26, 16, 37, 0.9) 100%);
+  border: 1px solid var(--color-slate-dark);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  border-color: var(--color-araptus);
+  box-shadow: 0 4px 30px rgba(87, 13, 248, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Button styles */
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-araptus) 0%, var(--color-araptus-dark) 100%);
+  color: white;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(87, 13, 248, 0.5);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-araptus-glow);
+  font-weight: 500;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: 1px solid var(--color-araptus);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: rgba(87, 13, 248, 0.15);
+}
+
+/* Input styles */
+.input-field {
+  background: var(--color-void);
+  border: 1px solid var(--color-slate-dark);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  transition: all 0.2s ease;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--color-araptus);
+  box-shadow: 0 0 0 3px rgba(87, 13, 248, 0.2);
+}
+
+.input-field::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* Drop zone */
+.drop-zone {
+  border: 2px dashed var(--color-slate-dark);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  background: rgba(15, 10, 26, 0.5);
+}
+
+.drop-zone:hover {
+  border-color: var(--color-slate-mid);
+  background: rgba(87, 13, 248, 0.03);
+}
+
+.drop-zone.dragging {
+  border-color: var(--color-araptus);
+  background: rgba(87, 13, 248, 0.1);
+  box-shadow: 0 0 30px rgba(87, 13, 248, 0.15);
+}
+
+/* Severity badges */
+.badge-critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.badge-high {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.badge-medium {
+  background: rgba(6, 182, 212, 0.15);
+  color: #22d3ee;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.badge-low {
+  background: rgba(139, 127, 173, 0.15);
+  color: #c4b5fd;
+  border: 1px solid rgba(139, 127, 173, 0.3);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.badge-safe {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+/* Code blocks */
+.code-block {
+  background: var(--color-void);
+  border: 1px solid var(--color-slate-dark);
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  overflow-x: auto;
+}
+
+/* Progress bar */
+.progress-bar {
+  height: 4px;
+  background: var(--color-slate-dark);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-araptus), var(--color-araptus-light));
+  transition: width 0.3s ease;
+}
+
+/* Araptus Logo styling */
+.araptus-logo {
+  filter: brightness(1.1);
+}
+
+.araptus-logo:hover {
+  filter: brightness(1.2);
+}
+
+/* Selection */
+::selection {
+  background: rgba(87, 13, 248, 0.4);
+  color: white;
+}

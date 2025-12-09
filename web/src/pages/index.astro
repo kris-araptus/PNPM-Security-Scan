@@ -1,0 +1,343 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Scanner from '../components/Scanner';
+---
+
+<Layout title="Scan Your Dependencies">
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <!-- Hero Section -->
+    <div class="text-center mb-12">
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-araptus/10 border border-araptus/20 text-araptus-glow text-sm font-medium mb-6">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-araptus opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-araptus"></span>
+        </span>
+        Threat database updated December 2025
+      </div>
+      
+      <h1 class="text-4xl sm:text-5xl font-bold text-text-primary mb-4">
+        Supply Chain
+        <span class="text-glow-accent text-araptus-glow"> Security Scanner</span>
+      </h1>
+      
+      <p class="text-lg text-text-secondary max-w-2xl mx-auto">
+        Instantly detect malicious npm packages in your dependencies.
+        Upload your <span class="text-info font-mono">package.json</span> or lock file
+        and we'll check against <span class="text-araptus-glow font-bold">137+ known threats</span>.
+      </p>
+    </div>
+
+    <!-- How To Use - Step by Step -->
+    <div class="card p-6 mb-8 border-araptus/30">
+      <h2 class="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-araptus-glow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        How to Secure Your GitHub Repo
+      </h2>
+      
+      <div class="grid sm:grid-cols-3 gap-4">
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-full bg-araptus/20 flex items-center justify-center flex-shrink-0 text-araptus-glow font-bold text-sm">1</div>
+          <div>
+            <p class="font-medium text-text-primary text-sm">Get Your Files</p>
+            <p class="text-text-muted text-xs mt-1">
+              Go to your GitHub repo → Download <code class="text-araptus-glow">package.json</code> or your lock file
+            </p>
+          </div>
+        </div>
+        
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-full bg-araptus/20 flex items-center justify-center flex-shrink-0 text-araptus-glow font-bold text-sm">2</div>
+          <div>
+            <p class="font-medium text-text-primary text-sm">Scan Below</p>
+            <p class="text-text-muted text-xs mt-1">
+              Drop or paste the file below → We'll identify any malicious packages
+            </p>
+          </div>
+        </div>
+        
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-full bg-araptus/20 flex items-center justify-center flex-shrink-0 text-araptus-glow font-bold text-sm">3</div>
+          <div>
+            <p class="font-medium text-text-primary text-sm">Fix & Commit</p>
+            <p class="text-text-muted text-xs mt-1">
+              Remove flagged packages → Update your repo → Run <code class="text-safe">npm install</code>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Banner -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+      <div class="card p-4 text-center card-hover">
+        <p class="text-2xl font-bold text-araptus-glow font-mono">137+</p>
+        <p class="text-text-muted text-sm">Known Threats</p>
+      </div>
+      <div class="card p-4 text-center card-hover">
+        <p class="text-2xl font-bold text-info font-mono">3</p>
+        <p class="text-text-muted text-sm">2025 Campaigns</p>
+      </div>
+      <div class="card p-4 text-center card-hover">
+        <p class="text-2xl font-bold text-warning font-mono">187+</p>
+        <p class="text-text-muted text-sm">Shai-Hulud Packages</p>
+      </div>
+      <div class="card p-4 text-center card-hover">
+        <p class="text-2xl font-bold text-safe font-mono">100%</p>
+        <p class="text-text-muted text-sm">Free & Open Source</p>
+      </div>
+    </div>
+
+    <!-- Scanner Component -->
+    <div class="mb-8">
+      <Scanner client:load />
+    </div>
+
+    <!-- Remediation Guide -->
+    <div class="card p-6 border-safe/30 mb-16">
+      <h2 class="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-safe" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        After Scanning: How to Remediate
+      </h2>
+      
+      <div class="space-y-4">
+        <div class="p-4 rounded-lg bg-alert/5 border border-alert/20">
+          <h3 class="font-semibold text-alert text-sm mb-2">🚨 If Critical Issues Found</h3>
+          <ol class="text-text-secondary text-sm space-y-2 list-decimal list-inside">
+            <li><strong class="text-text-primary">Stop deployments</strong> — Don't deploy until fixed</li>
+            <li><strong class="text-text-primary">Remove the package</strong> — <code class="text-araptus-glow bg-void/50 px-1 rounded">npm uninstall &lt;package-name&gt;</code></li>
+            <li><strong class="text-text-primary">Find alternatives</strong> — Search <a href="https://npmjs.com" target="_blank" class="text-info hover:underline">npmjs.com</a> for safe replacements</li>
+            <li><strong class="text-text-primary">Rotate credentials</strong> — If credential theft detected, rotate ALL secrets</li>
+            <li><strong class="text-text-primary">Commit & push</strong> — Update your GitHub repo with the fixed package.json</li>
+          </ol>
+        </div>
+        
+        <div class="p-4 rounded-lg bg-warning/5 border border-warning/20">
+          <h3 class="font-semibold text-warning text-sm mb-2">⚠️ If Typosquatting Detected</h3>
+          <p class="text-text-secondary text-sm">
+            You likely installed a fake package with a similar name. Check your <code class="text-araptus-glow">package.json</code> for typos:
+          </p>
+          <div class="mt-2 code-block p-3 text-xs">
+            <div class="text-alert">- "loadash": "^1.0.0"  <span class="text-text-muted">// ❌ Typosquat</span></div>
+            <div class="text-safe">+ "lodash": "^4.17.21" <span class="text-text-muted">// ✅ Correct</span></div>
+          </div>
+        </div>
+        
+        <div class="p-4 rounded-lg bg-info/5 border border-info/20">
+          <h3 class="font-semibold text-info text-sm mb-2">💡 Transitive Dependency Issues</h3>
+          <p class="text-text-secondary text-sm">
+            If the malicious package is a <strong>transitive dependency</strong> (not in your package.json), 
+            you need to update the parent package that brought it in. Use the dependency chain shown in results 
+            to identify which of your direct dependencies to update.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="grid sm:grid-cols-3 gap-6">
+      <div class="card p-6 card-hover">
+        <div class="w-12 h-12 rounded-xl bg-alert/10 flex items-center justify-center mb-4">
+          <svg class="w-6 h-6 text-alert" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-text-primary mb-2">Malware Detection</h3>
+        <p class="text-text-secondary text-sm">
+          Detects confirmed malicious packages, typosquatting attempts, credential theft, and crypto malware.
+        </p>
+      </div>
+
+      <div class="card p-6 card-hover">
+        <div class="w-12 h-12 rounded-xl bg-info/10 flex items-center justify-center mb-4">
+          <svg class="w-6 h-6 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-text-primary mb-2">Deep Scanning</h3>
+        <p class="text-text-secondary text-sm">
+          Analyzes lock files to scan transitive dependencies — where real supply chain attacks hide.
+        </p>
+      </div>
+
+      <div class="card p-6 card-hover">
+        <div class="w-12 h-12 rounded-xl bg-araptus/10 flex items-center justify-center mb-4">
+          <svg class="w-6 h-6 text-araptus-glow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-text-primary mb-2">Campaign Tracking</h3>
+        <p class="text-text-secondary text-sm">
+          Tracks major attack campaigns like Shai-Hulud and PhantomRaven with version-specific detection.
+        </p>
+      </div>
+    </div>
+
+    <!-- Which File to Use -->
+    <div class="mt-16 card p-6">
+      <h2 class="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-araptus-glow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        Which File Should You Upload?
+      </h2>
+      
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-slate-dark">
+              <th class="text-left py-3 px-4 text-text-muted font-medium">File</th>
+              <th class="text-left py-3 px-4 text-text-muted font-medium">Location in GitHub</th>
+              <th class="text-left py-3 px-4 text-text-muted font-medium">What It Scans</th>
+              <th class="text-left py-3 px-4 text-text-muted font-medium">Recommended</th>
+            </tr>
+          </thead>
+          <tbody class="text-text-secondary">
+            <tr class="border-b border-slate-dark/50">
+              <td class="py-3 px-4 font-mono text-araptus-glow">package.json</td>
+              <td class="py-3 px-4">Root of repo</td>
+              <td class="py-3 px-4">Direct dependencies only</td>
+              <td class="py-3 px-4"><span class="text-warning">Quick check</span></td>
+            </tr>
+            <tr class="border-b border-slate-dark/50">
+              <td class="py-3 px-4 font-mono text-info">pnpm-lock.yaml</td>
+              <td class="py-3 px-4">Root of repo</td>
+              <td class="py-3 px-4">ALL dependencies (deep)</td>
+              <td class="py-3 px-4"><span class="text-safe">✓ Best for pnpm</span></td>
+            </tr>
+            <tr class="border-b border-slate-dark/50">
+              <td class="py-3 px-4 font-mono text-info">package-lock.json</td>
+              <td class="py-3 px-4">Root of repo</td>
+              <td class="py-3 px-4">ALL dependencies (deep)</td>
+              <td class="py-3 px-4"><span class="text-safe">✓ Best for npm</span></td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-mono text-info">yarn.lock</td>
+              <td class="py-3 px-4">Root of repo</td>
+              <td class="py-3 px-4">ALL dependencies (deep)</td>
+              <td class="py-3 px-4"><span class="text-safe">✓ Best for yarn</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <p class="mt-4 text-text-muted text-sm">
+        💡 <strong class="text-text-secondary">Pro tip:</strong> Upload your lock file for the most thorough scan. 
+        It includes transitive dependencies where most supply chain attacks hide.
+      </p>
+    </div>
+
+    <!-- Campaign Info -->
+    <div class="mt-16">
+      <h2 class="text-2xl font-bold text-text-primary mb-6 text-center">
+        Recent Supply Chain Attacks
+      </h2>
+      
+      <div class="space-y-4">
+        <div class="card p-6 border-alert/20">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-alert/10 flex items-center justify-center flex-shrink-0">
+              <span class="text-xl">🐛</span>
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2 mb-1">
+                <h3 class="font-semibold text-text-primary">Shai-Hulud Malware</h3>
+                <span class="badge-critical text-xs font-medium uppercase">Critical</span>
+                <span class="text-text-muted text-sm">Sept 2025</span>
+              </div>
+              <p class="text-text-secondary text-sm">
+                Self-replicating worm that infected 187+ packages with 2M+ weekly downloads. 
+                Harvests npm credentials and developer tokens by modifying package.json files.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-6 border-alert/20">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-alert/10 flex items-center justify-center flex-shrink-0">
+              <span class="text-xl">🦅</span>
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2 mb-1">
+                <h3 class="font-semibold text-text-primary">PhantomRaven Campaign</h3>
+                <span class="badge-critical text-xs font-medium uppercase">Critical</span>
+                <span class="text-text-muted text-sm">Aug 2025</span>
+              </div>
+              <p class="text-text-secondary text-sm">
+                Exploited npm Remote Dynamic Dependencies to distribute 126 malicious packages 
+                targeting CI/CD pipelines. Harvested authentication tokens and credentials.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-6 border-warning/20">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center flex-shrink-0">
+              <span class="text-xl">🎭</span>
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2 mb-1">
+                <h3 class="font-semibold text-text-primary">Token Farming Scam</h3>
+                <span class="badge-high text-xs font-medium uppercase">High</span>
+                <span class="text-text-muted text-sm">Nov 2025</span>
+              </div>
+              <p class="text-text-secondary text-sm">
+                Massive operation with 150,000+ fake packages published to manipulate npm metrics 
+                and fraudulently inflate package popularity.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CI/CD Integration CTA -->
+    <div class="mt-16 card p-8 text-center bg-gradient-to-br from-araptus/5 to-araptus-light/5 border-araptus/20">
+      <h2 class="text-2xl font-bold text-text-primary mb-4">
+        Automate Security in Your GitHub Workflow
+      </h2>
+      <p class="text-text-secondary mb-6 max-w-xl mx-auto">
+        Add the CLI scanner to your CI/CD pipeline for automatic protection on every push and PR.
+      </p>
+      
+      <div class="code-block p-4 max-w-2xl mx-auto text-left mb-6">
+        <p class="text-text-muted text-xs mb-2"># .github/workflows/security-scan.yml</p>
+        <pre class="text-araptus-glow text-sm overflow-x-auto"><code>name: Security Scan
+on: [push, pull_request]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx @kris-araptus/npm-security-scanner --deep --strict</code></pre>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a 
+          href="https://github.com/kris-araptus/pnpm-security-scan" 
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-primary inline-flex items-center gap-2"
+        >
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
+          </svg>
+          View on GitHub
+        </a>
+        <a 
+          href="https://araptus.com/contact" 
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-secondary inline-flex items-center gap-2"
+        >
+          Need Help?
+        </a>
+      </div>
+    </div>
+  </div>
+</Layout>

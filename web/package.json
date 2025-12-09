@@ -1,0 +1,28 @@
+{
+  "name": "@kris-araptus/security-scanner-web",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Web UI for the npm Security Scanner - detect malicious packages in your dependencies",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/react": "^4.4.2",
+    "@astrojs/vercel": "^9.0.2",
+    "@tailwindcss/vite": "^4.1.17",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "astro": "^5.16.4",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "tailwindcss": "^4.1.17"
+  },
+  "author": "Kris Araptus",
+  "contributors": [
+    "Jeremiah Coakley <jeremiah@fedlin.com> (https://fedlin.com)"
+  ],
+  "license": "MIT"
+}

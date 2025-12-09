@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="araptus-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6"/>
+      <stop offset="100%" style="stop-color:#1d4ed8"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="#0f172a"/>
+  <!-- Layered hexagon/prism shape representing Araptus -->
+  <g transform="translate(64, 64)">
+    <path 
+      d="M0 -40 L35 -20 L35 20 L0 40 L-35 20 L-35 -20 Z" 
+      fill="none" 
+      stroke="url(#araptus-gradient)" 
+      stroke-width="4"
+      opacity="0.3"
+    />
+    <path 
+      d="M0 -32 L28 -16 L28 16 L0 32 L-28 16 L-28 -16 Z" 
+      fill="none" 
+      stroke="url(#araptus-gradient)" 
+      stroke-width="4"
+      opacity="0.6"
+    />
+    <path 
+      d="M0 -24 L21 -12 L21 12 L0 24 L-21 12 L-21 -12 Z" 
+      fill="url(#araptus-gradient)" 
+      opacity="0.9"
+    />
+    <!-- Shield checkmark -->
+    <path 
+      d="M-8 2 L-2 8 L10 -6" 
+      fill="none" 
+      stroke="white" 
+      stroke-width="4"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </g>
+</svg>

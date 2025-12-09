@@ -1,7 +1,7 @@
 {
   "name": "@kris-araptus/npm-security-scanner",
-  "version": "1.1.0",
-  "description": "A fast, configurable CLI tool that scans your dependencies against a continuously-updated database of known compromised npm packages",
+  "version": "2.0.0",
+  "description": "A fast, configurable CLI tool that scans your dependencies against a continuously-updated database of known compromised npm packages. Supports deep scanning of transitive dependencies via lock files.",
   "main": "scripts/security-scan.js",
   "bin": {
     "security-scan": "./scripts/security-scan.js"
@@ -11,8 +11,11 @@
     "security:scan:verbose": "node scripts/security-scan.js --verbose",
     "security:scan:json": "node scripts/security-scan.js --json",
     "security:scan:strict": "node scripts/security-scan.js --strict",
-    "security:audit": "pnpm audit --prod && node scripts/security-scan.js",
-    "security:full": "pnpm audit; pnpm outdated || true; node scripts/security-scan.js --verbose",
+    "security:scan:deep": "node scripts/security-scan.js --deep",
+    "security:scan:deep:verbose": "node scripts/security-scan.js --deep --verbose",
+    "security:scan:deep:strict": "node scripts/security-scan.js --deep --strict",
+    "security:audit": "pnpm audit --prod && node scripts/security-scan.js --deep",
+    "security:full": "pnpm audit; pnpm outdated || true; node scripts/security-scan.js --deep --verbose",
     "test": "node --test tests/security-scan.test.js",
     "test:verbose": "node --test --test-reporter spec tests/security-scan.test.js",
     "test:scan": "node scripts/security-scan.js --verbose"

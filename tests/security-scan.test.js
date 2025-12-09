@@ -169,7 +169,8 @@ describe('CLI Interface', () => {
     
     const result = JSON.parse(stdout);
     assert.ok(result.timestamp, 'Should have timestamp');
-    assert.ok(typeof result.packagesScanned === 'number', 'Should have packagesScanned');
+    assert.ok(result.packagesScanned, 'Should have packagesScanned');
+    assert.ok(typeof result.packagesScanned.total === 'number', 'Should have packagesScanned.total');
     assert.ok(typeof result.totalIssues === 'number', 'Should have totalIssues');
     assert.ok(result.results, 'Should have results');
     assert.ok(Array.isArray(result.results.critical), 'Should have critical array');
@@ -220,7 +221,7 @@ describe('Scanning Clean Project', () => {
   it('should scan all dependencies', async () => {
     const { stdout } = await runScanner(['--json'], fixtureDir);
     const result = JSON.parse(stdout);
-    assert.strictEqual(result.packagesScanned, 4, 'Should scan 4 packages');
+    assert.strictEqual(result.packagesScanned.total, 4, 'Should scan 4 packages');
   });
   
   it('should show success message', async () => {
@@ -340,7 +341,7 @@ describe('Trusted Packages', () => {
   it('should recognize trusted packages', async () => {
     const { code, stdout } = await runScanner(['--verbose'], fixtureDir);
     assert.strictEqual(code, 0, 'Should exit with code 0');
-    assert.ok(stdout.includes('Trusted package'), 'Should show trusted packages');
+    assert.ok(stdout.includes('- Trusted'), 'Should show trusted packages');
   });
   
   it('should not flag trusted packages as issues', async () => {
@@ -476,7 +477,7 @@ describe('Edge Cases', () => {
     try {
       const { stdout } = await runScanner(['--json'], fixtureDir);
       const result = JSON.parse(stdout);
-      assert.strictEqual(result.packagesScanned, 1, 'Should scan peer dependencies');
+      assert.strictEqual(result.packagesScanned.total, 1, 'Should scan peer dependencies');
     } finally {
       removeFixture(fixtureName);
     }
@@ -495,7 +496,7 @@ describe('Edge Cases', () => {
     try {
       const { stdout } = await runScanner(['--json'], fixtureDir);
       const result = JSON.parse(stdout);
-      assert.strictEqual(result.packagesScanned, 1, 'Should scan optional dependencies');
+      assert.strictEqual(result.packagesScanned.total, 1, 'Should scan optional dependencies');
     } finally {
       removeFixture(fixtureName);
     }
@@ -564,11 +565,420 @@ describe('Pattern Matching', () => {
     try {
       const { stdout } = await runScanner(['--verbose'], fixtureDir);
       // @types/* and @astrojs/* should be trusted
-      const trustedCount = (stdout.match(/Trusted package/g) || []).length;
+      const trustedCount = (stdout.match(/- Trusted/g) || []).length;
       assert.ok(trustedCount >= 3, 'Should recognize multiple trusted scoped packages');
     } finally {
       removeFixture(fixtureName);
     }
+  });
+});
+
+// ============================================
+// Deep Scan - CLI Tests
+// ============================================
+
+describe('Deep Scan CLI', () => {
+  it('should show --deep option in help', async () => {
+    const { code, stdout } = await runScanner(['--help']);
+    assert.strictEqual(code, 0, 'Should exit with code 0');
+    assert.ok(stdout.includes('--deep'), 'Should show --deep option');
+    assert.ok(stdout.includes('-d'), 'Should show -d shorthand');
+    assert.ok(stdout.includes('transitive'), 'Should mention transitive dependencies');
+  });
+  
+  it('should accept --deep flag', async () => {
+    const { code, stdout } = await runScanner(['--deep']);
+    assert.strictEqual(code, 0, 'Should exit successfully');
+    assert.ok(
+      stdout.includes('Deep scan enabled') || stdout.includes('No lock file found'),
+      'Should acknowledge deep scan mode'
+    );
+  });
+  
+  it('should accept -d flag', async () => {
+    const { code } = await runScanner(['-d']);
+    assert.strictEqual(code, 0, 'Should exit successfully with -d flag');
+  });
+  
+  it('should include scan mode in JSON output', async () => {
+    const { stdout } = await runScanner(['--json']);
+    const result = JSON.parse(stdout);
+    assert.ok(result.scanMode, 'Should have scanMode field');
+    assert.ok(['direct', 'deep'].includes(result.scanMode), 'scanMode should be direct or deep');
+  });
+  
+  it('should include package stats breakdown in JSON', async () => {
+    const { stdout } = await runScanner(['--json']);
+    const result = JSON.parse(stdout);
+    assert.ok(result.packagesScanned, 'Should have packagesScanned object');
+    assert.ok(typeof result.packagesScanned.total === 'number', 'Should have total count');
+    assert.ok(typeof result.packagesScanned.direct === 'number', 'Should have direct count');
+    assert.ok(typeof result.packagesScanned.transitive === 'number', 'Should have transitive count');
+  });
+});
+
+// ============================================
+// Deep Scan - pnpm-lock.yaml
+// ============================================
+
+describe('Deep Scan with pnpm-lock.yaml', () => {
+  const fixtureName = 'pnpm-lock-project';
+  let fixtureDir;
+  
+  // Sample pnpm-lock.yaml content (pnpm v9 format)
+  const pnpmLockContent = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+
+importers:
+  .:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+  /lodash@4.17.21:
+    resolution: {integrity: sha512-xyz}
+    
+  /event-stream@4.0.1:
+    resolution: {integrity: sha512-abc}
+    
+  /flatmap-stream@0.1.1:
+    resolution: {integrity: sha512-def}
+`;
+
+  before(() => {
+    fixtureDir = createFixture(fixtureName, {
+      name: 'test-pnpm-lock',
+      version: '1.0.0',
+      dependencies: {
+        'lodash': '^4.17.21'
+      }
+    });
+    
+    // Add pnpm-lock.yaml with transitive malicious package
+    fs.writeFileSync(
+      path.join(fixtureDir, 'pnpm-lock.yaml'),
+      pnpmLockContent
+    );
+  });
+  
+  after(() => {
+    removeFixture(fixtureName);
+  });
+  
+  it('should detect pnpm-lock.yaml', async () => {
+    const { stdout } = await runScanner(['--deep', '--verbose'], fixtureDir);
+    assert.ok(stdout.includes('pnpm-lock.yaml'), 'Should detect pnpm lock file');
+  });
+  
+  it('should find transitive malicious package', async () => {
+    const { code, stdout } = await runScanner(['--deep', '--json'], fixtureDir);
+    assert.strictEqual(code, 1, 'Should exit with code 1 due to malicious transitive dep');
+    
+    const result = JSON.parse(stdout);
+    assert.ok(result.totalIssues > 0, 'Should find issues');
+    
+    // Should find event-stream or flatmap-stream as transitive
+    const foundTransitive = result.results.critical.some(i => 
+      (i.package === 'event-stream' || i.package === 'flatmap-stream') && i.isTransitive
+    );
+    assert.ok(foundTransitive, 'Should identify transitive malicious package');
+  });
+  
+  it('should report correct package counts', async () => {
+    const { stdout } = await runScanner(['--deep', '--json'], fixtureDir);
+    const result = JSON.parse(stdout);
+    
+    assert.ok(result.packagesScanned.total > result.packagesScanned.direct, 
+      'Total should be greater than direct when transitive deps exist');
+    assert.ok(result.packagesScanned.transitive > 0, 
+      'Should have transitive packages');
+  });
+});
+
+// ============================================
+// Deep Scan - package-lock.json
+// ============================================
+
+describe('Deep Scan with package-lock.json', () => {
+  const fixtureName = 'npm-lock-project';
+  let fixtureDir;
+  
+  // Sample package-lock.json (npm v7+ format)
+  const npmLockContent = JSON.stringify({
+    name: 'test-npm-lock',
+    version: '1.0.0',
+    lockfileVersion: 3,
+    packages: {
+      '': {
+        name: 'test-npm-lock',
+        version: '1.0.0',
+        dependencies: {
+          'lodash': '^4.17.21'
+        }
+      },
+      'node_modules/lodash': {
+        version: '4.17.21',
+        resolved: 'https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz'
+      },
+      'node_modules/event-stream': {
+        version: '4.0.1',
+        resolved: 'https://registry.npmjs.org/event-stream/-/event-stream-4.0.1.tgz'
+      },
+      'node_modules/loadash': {
+        version: '1.0.0',
+        resolved: 'https://registry.npmjs.org/loadash/-/loadash-1.0.0.tgz'
+      }
+    }
+  }, null, 2);
+
+  before(() => {
+    fixtureDir = createFixture(fixtureName, {
+      name: 'test-npm-lock',
+      version: '1.0.0',
+      dependencies: {
+        'lodash': '^4.17.21'
+      }
+    });
+    
+    // Add package-lock.json with transitive malicious packages
+    fs.writeFileSync(
+      path.join(fixtureDir, 'package-lock.json'),
+      npmLockContent
+    );
+  });
+  
+  after(() => {
+    removeFixture(fixtureName);
+  });
+  
+  it('should detect package-lock.json', async () => {
+    const { stdout } = await runScanner(['--deep', '--verbose'], fixtureDir);
+    assert.ok(stdout.includes('package-lock.json'), 'Should detect npm lock file');
+  });
+  
+  it('should find transitive malicious packages', async () => {
+    const { code, stdout } = await runScanner(['--deep', '--json'], fixtureDir);
+    assert.strictEqual(code, 1, 'Should exit with code 1');
+    
+    const result = JSON.parse(stdout);
+    assert.ok(result.totalIssues >= 2, 'Should find at least 2 issues (event-stream + loadash)');
+  });
+  
+  it('should mark transitive issues correctly', async () => {
+    const { stdout } = await runScanner(['--deep', '--json'], fixtureDir);
+    const result = JSON.parse(stdout);
+    
+    const transitiveIssue = result.results.critical.find(i => 
+      i.package === 'event-stream' || i.package === 'loadash'
+    );
+    assert.ok(transitiveIssue, 'Should find transitive issue');
+    assert.strictEqual(transitiveIssue.isTransitive, true, 'Should be marked as transitive');
+  });
+});
+
+// ============================================
+// Deep Scan - yarn.lock
+// ============================================
+
+describe('Deep Scan with yarn.lock', () => {
+  const fixtureName = 'yarn-lock-project';
+  let fixtureDir;
+  
+  // Sample yarn.lock content
+  const yarnLockContent = `# THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.
+# yarn lockfile v1
+
+lodash@^4.17.21:
+  version "4.17.21"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz"
+  integrity sha512-xyz
+
+event-stream@^4.0.0:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/event-stream/-/event-stream-4.0.1.tgz"
+  integrity sha512-abc
+
+flatmap-stream@^0.1.0:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/flatmap-stream/-/flatmap-stream-0.1.1.tgz"
+  integrity sha512-def
+`;
+
+  before(() => {
+    fixtureDir = createFixture(fixtureName, {
+      name: 'test-yarn-lock',
+      version: '1.0.0',
+      dependencies: {
+        'lodash': '^4.17.21'
+      }
+    });
+    
+    // Add yarn.lock with transitive malicious packages
+    fs.writeFileSync(
+      path.join(fixtureDir, 'yarn.lock'),
+      yarnLockContent
+    );
+  });
+  
+  after(() => {
+    removeFixture(fixtureName);
+  });
+  
+  it('should detect yarn.lock', async () => {
+    const { stdout } = await runScanner(['--deep', '--verbose'], fixtureDir);
+    assert.ok(stdout.includes('yarn.lock'), 'Should detect yarn lock file');
+  });
+  
+  it('should find transitive malicious packages', async () => {
+    const { code, stdout } = await runScanner(['--deep', '--json'], fixtureDir);
+    assert.strictEqual(code, 1, 'Should exit with code 1');
+    
+    const result = JSON.parse(stdout);
+    assert.ok(result.totalIssues >= 2, 'Should find at least 2 issues');
+  });
+});
+
+// ============================================
+// Deep Scan - No Lock File
+// ============================================
+
+describe('Deep Scan without Lock File', () => {
+  const fixtureName = 'no-lock-project';
+  let fixtureDir;
+  
+  before(() => {
+    fixtureDir = createFixture(fixtureName, {
+      name: 'test-no-lock',
+      version: '1.0.0',
+      dependencies: {
+        'lodash': '^4.17.21'
+      }
+    });
+    // No lock file created
+  });
+  
+  after(() => {
+    removeFixture(fixtureName);
+  });
+  
+  it('should fall back gracefully when no lock file exists', async () => {
+    const { code, stdout } = await runScanner(['--deep'], fixtureDir);
+    assert.strictEqual(code, 0, 'Should still exit with code 0');
+    assert.ok(
+      stdout.includes('No lock file found') || stdout.includes('falling back'),
+      'Should indicate fallback to direct deps'
+    );
+  });
+  
+  it('should still scan direct dependencies', async () => {
+    const { stdout } = await runScanner(['--deep', '--json'], fixtureDir);
+    const result = JSON.parse(stdout);
+    assert.strictEqual(result.packagesScanned.direct, 1, 'Should scan 1 direct dependency');
+    assert.strictEqual(result.packagesScanned.transitive, 0, 'Should have 0 transitive deps');
+  });
+});
+
+// ============================================
+// Deep Scan - Issue Output Format
+// ============================================
+
+describe('Deep Scan Issue Output', () => {
+  const fixtureName = 'deep-output-project';
+  let fixtureDir;
+  
+  const npmLockContent = JSON.stringify({
+    name: 'test-deep-output',
+    version: '1.0.0',
+    lockfileVersion: 3,
+    packages: {
+      '': { name: 'test-deep-output', version: '1.0.0', dependencies: { 'safe-pkg': '^1.0.0' } },
+      'node_modules/safe-pkg': { version: '1.0.0' },
+      'node_modules/event-stream': { version: '4.0.1' }
+    }
+  }, null, 2);
+
+  before(() => {
+    fixtureDir = createFixture(fixtureName, {
+      name: 'test-deep-output',
+      version: '1.0.0',
+      dependencies: {
+        'safe-pkg': '^1.0.0'
+      }
+    });
+    
+    fs.writeFileSync(
+      path.join(fixtureDir, 'package-lock.json'),
+      npmLockContent
+    );
+  });
+  
+  after(() => {
+    removeFixture(fixtureName);
+  });
+  
+  it('should show TRANSITIVE label in output', async () => {
+    const { stdout } = await runScanner(['--deep'], fixtureDir);
+    assert.ok(stdout.includes('TRANSITIVE'), 'Should show TRANSITIVE label');
+  });
+  
+  it('should include transitiveIssues count in JSON', async () => {
+    const { stdout } = await runScanner(['--deep', '--json'], fixtureDir);
+    const result = JSON.parse(stdout);
+    assert.ok(typeof result.transitiveIssues === 'number', 'Should have transitiveIssues field');
+  });
+  
+  it('should include isDirect and isTransitive in issue objects', async () => {
+    const { stdout } = await runScanner(['--deep', '--json'], fixtureDir);
+    const result = JSON.parse(stdout);
+    
+    if (result.totalIssues > 0) {
+      const issue = result.results.critical[0] || result.results.high[0];
+      assert.ok(typeof issue.isDirect === 'boolean', 'Issue should have isDirect');
+      assert.ok(typeof issue.isTransitive === 'boolean', 'Issue should have isTransitive');
+      assert.ok(Array.isArray(issue.dependencyChain), 'Issue should have dependencyChain array');
+    }
+  });
+});
+
+// ============================================
+// Deep Scan - Lock File Priority
+// ============================================
+
+describe('Lock File Priority', () => {
+  const fixtureName = 'multi-lock-project';
+  let fixtureDir;
+
+  before(() => {
+    fixtureDir = createFixture(fixtureName, {
+      name: 'test-multi-lock',
+      version: '1.0.0',
+      dependencies: {
+        'lodash': '^4.17.21'
+      }
+    });
+    
+    // Create all three lock files - pnpm should take priority
+    fs.writeFileSync(path.join(fixtureDir, 'pnpm-lock.yaml'), 
+      'lockfileVersion: 9.0\npackages:\n  /lodash@4.17.21:\n    resolution: {}\n');
+    fs.writeFileSync(path.join(fixtureDir, 'package-lock.json'), 
+      JSON.stringify({ name: 'test', lockfileVersion: 3, packages: {} }));
+    fs.writeFileSync(path.join(fixtureDir, 'yarn.lock'), 
+      '# yarn lockfile v1\n');
+  });
+  
+  after(() => {
+    removeFixture(fixtureName);
+  });
+  
+  it('should prioritize pnpm-lock.yaml over other lock files', async () => {
+    const { stdout } = await runScanner(['--deep', '--verbose'], fixtureDir);
+    assert.ok(stdout.includes('pnpm-lock.yaml'), 'Should use pnpm-lock.yaml');
+    assert.ok(!stdout.includes('package-lock.json'), 'Should not use package-lock.json');
+    assert.ok(!stdout.includes('yarn.lock') || stdout.includes('pnpm'), 'Should prefer pnpm');
   });
 });
 
