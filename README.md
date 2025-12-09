@@ -4,6 +4,8 @@ Detect compromised npm packages in your Node.js projects.
 
 A fast, zero-dependency CLI tool that scans your dependencies against a database of known malicious packages.
 
+> **Inspired by the [Shai-Hulud npm worm](https://socket.dev/blog/shai-hulud-npm-worm)** — a self-replicating malware that infected 187+ packages with 2M+ weekly downloads in September 2025.
+
 ---
 
 ## Quick Start
