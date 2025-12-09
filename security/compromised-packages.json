@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "lastUpdated": "2025-12-09",
   "sources": [
     "https://github.com/advisories?query=ecosystem%3Anpm",
@@ -7,7 +7,8 @@
     "https://snyk.io/vuln",
     "https://www.npmjs.com/advisories",
     "https://jfrog.com/blog",
-    "https://www.endorlabs.com/learn"
+    "https://www.fortinet.com/blog/threat-research",
+    "https://www.sonatype.com/blog"
   ],
   
   "campaigns": {
@@ -19,11 +20,6 @@
       "packagesAffected": 187,
       "weeklyDownloads": 2000000,
       "packages": [
-        "@ctrl/tinycolor",
-        "bignum",
-        "node-addon-api",
-        "prebuild-install",
-        "node-gyp-build",
         "@pnpm/logger",
         "@pnpm/core-loggers"
       ],
@@ -41,50 +37,27 @@
         "Network requests to unknown domains"
       ],
       "references": [
-        "https://www.techradar.com/pro/security/self-replicating-shai-hulud-infects-147-npm-packages-with-over-2-million-downloads-per-week"
+        "https://www.techradar.com/pro/security/self-replicating-shai-hulud-infects-147-npm-packages-with-over-2-million-downloads-per-week",
+        "https://socket.dev/blog/shai-hulud-npm-worm"
       ]
     },
     
-    "crypto-hijack-2025-09": {
-      "name": "Cryptocurrency Transaction Hijacking",
-      "date": "2025-09",
+    "phantomraven-2025-08": {
+      "name": "PhantomRaven Campaign",
+      "date": "2025-08",
       "severity": "critical",
-      "description": "Phishing-led attack that intercepted cryptocurrency transactions and replaced wallet addresses. Targeted developers working on Web3 projects.",
-      "packagesAffected": 18,
-      "weeklyDownloads": 2600000000,
-      "packages": [
-        "debug",
-        "chalk",
-        "ansi-styles",
-        "supports-color",
-        "escape-string-regexp",
-        "wrap-ansi",
-        "string-width",
-        "cliui",
-        "y18n",
-        "find-up",
-        "locate-path",
-        "p-locate",
-        "p-limit",
-        "yocto-queue",
-        "strip-ansi",
-        "color-convert",
-        "color-name",
-        "ansi-regex"
-      ],
-      "affectedVersions": {
-        "debug": ["4.3.4"],
-        "chalk": ["5.3.0"],
-        "ansi-styles": ["6.2.1"],
-        "supports-color": ["9.4.0"]
-      },
+      "description": "Exploited npm Remote Dynamic Dependencies to distribute 126 malicious packages targeting developers and CI/CD pipelines. Harvests authentication tokens and credentials.",
+      "packagesAffected": 126,
+      "downloads": 86000,
+      "packages": [],
       "indicators": [
-        "Unusual network traffic",
-        "Modified wallet addresses in transactions",
-        "Unexpected cryptocurrency movements"
+        "Suspicious Remote Dynamic Dependencies",
+        "Credential harvesting behavior",
+        "CI/CD token theft",
+        "Unusual network traffic during install"
       ],
       "references": [
-        "https://jfrog.com/blog/new-compromised-packages-in-largest-npm-attack-in-history/"
+        "https://arstechnica.com/security/2025/10/npm-flooded-with-malicious-packages-downloaded-more-than-86000-times/"
       ]
     },
     
@@ -120,51 +93,52 @@
       "node-ipc",
       "peacenotwar",
       "es5-ext",
+      "left-pad",
       "discord.js-selfbot-v11",
       "discord-lofy",
       "discord-selfbot-v14",
       "discord-boost-tool",
       "discordcrypt",
-      "py-compressor",
-      "py-util",
-      "py-lzma",
-      "py-crypto-v2",
-      "python3-dateutil",
-      "python3-crypto",
-      "python3-httplib2",
-      "python3-jwt",
-      "python3-openssl",
-      "python3-pil",
-      "python3-requests",
-      "python3-simplejson",
-      "python3-urllib3",
       "okhttpjs",
       "http-client-proto",
       "httpz-client",
-      "colorsjs",
-      "colors-js",
-      "colorss",
-      "chalkjs",
       "loglevel-syslog",
       "loggger",
       "loggy",
       "logger-util",
       "log4j-core",
-      "log4shell"
+      "log4shell",
+      "plutov-slack-client",
+      "nodetest199",
+      "nodetest1010",
+      "npm-script-demo",
+      "pandora-doomsday",
+      "markedjs",
+      "momentes",
+      "aa-exec-lib",
+      "node-hide-console-windows",
+      "web3-token",
+      "solana-web3-sdk",
+      "eth-wallet-gen",
+      "crypto-wallet-finder",
+      "wallet-tools-eth"
     ],
     
     "typosquatting": [
       "loadash",
       "lodahs",
       "lodasj",
+      "lodesh",
       "expres",
       "expresss",
       "express-js",
       "expresjs",
+      "exppress",
       "raect",
       "reactjs",
       "react-js",
       "reaact",
+      "reacct",
       "babelcli",
       "babel-cli-js",
       "cross-env.js",
@@ -175,18 +149,48 @@
       "axois",
       "axio",
       "axiosjs",
+      "axioss",
       "electorn",
       "electon",
       "electronjs",
+      "electrn",
       "webpackk",
       "webpack-js",
       "webpack-cli-js",
+      "wepack",
       "jquerry",
       "jqeury",
       "jquery-js",
+      "jquuery",
       "typescritp",
       "typesript",
-      "typescript-js"
+      "typescript-js",
+      "tyscript",
+      "colorsjs",
+      "colors-js",
+      "colorss",
+      "chalkjs",
+      "chalk-js",
+      "momment",
+      "momen",
+      "moment-js",
+      "momentjs",
+      "underscorejs",
+      "underscore-js",
+      "undescore",
+      "requets",
+      "reqeusts",
+      "requuests",
+      "expresion",
+      "asynk",
+      "asnyc",
+      "asyncc",
+      "blubird",
+      "bleubird",
+      "sequalizee",
+      "seqeulize",
+      "prismaa",
+      "priisma"
     ],
     
     "credentialTheft": [
@@ -200,11 +204,37 @@
       "token-stealer",
       "env-stealer",
       "dotenv-grab",
-      ".env-stealer",
+      "dotenv-stealer",
       "get-env-vars",
       "ssh-key-stealer",
       "aws-credential-getter",
-      "gcloud-credentials"
+      "gcloud-credentials",
+      "azure-token-grab",
+      "github-token-getter",
+      "npm-token-grab",
+      "browserpass",
+      "chrome-pass",
+      "firefox-pass",
+      "browser-cookies-grab",
+      "system-info-grab",
+      "keylogger-js",
+      "keystroke-logger"
+    ],
+    
+    "cryptoMalware": [
+      "web3-token",
+      "solana-web3-sdk",
+      "eth-wallet-gen",
+      "crypto-wallet-finder",
+      "wallet-tools-eth",
+      "btc-address-gen",
+      "ethereum-wallet-grab",
+      "crypto-miner-lib",
+      "xmrig-node",
+      "coinhive-js",
+      "monero-miner",
+      "browser-miner",
+      "cpu-miner-node"
     ]
   },
   
@@ -219,11 +249,19 @@
       "@vitejs/*",
       "@vue/*",
       "@angular/*",
+      "@nestjs/*",
+      "@remix-run/*",
+      "@sveltejs/*",
+      "@vercel/*",
+      "@aws-sdk/*",
+      "@azure/*",
+      "@google-cloud/*",
       "typescript",
       "react",
       "react-dom",
       "next",
       "vue",
+      "nuxt",
       "angular",
       "svelte",
       "solid-js",
@@ -242,7 +280,19 @@
       "prettier",
       "jest",
       "mocha",
-      "vitest"
+      "vitest",
+      "chalk",
+      "debug",
+      "commander",
+      "yargs",
+      "inquirer",
+      "ora",
+      "zod",
+      "prisma",
+      "mongoose",
+      "sequelize",
+      "knex",
+      "socket.io"
     ]
   },
   
@@ -266,7 +316,10 @@
         ".env",
         "process.env",
         "npm token",
-        "npmrc"
+        "npmrc",
+        "child_process",
+        "exec(",
+        "spawn("
       ]
     },
     
@@ -280,7 +333,9 @@
         "Obfuscated code",
         "Unnecessary permissions requested",
         "Network requests in postinstall",
-        "File system access outside node_modules"
+        "File system access outside node_modules",
+        "Accessing browser storage",
+        "Unusual dependency chains"
       ]
     }
   },
@@ -289,9 +344,8 @@
     "maintainer": "Kris Araptus",
     "updateFrequency": "Weekly",
     "lastReviewDate": "2025-12-09",
-    "totalPackages": 42,
+    "totalMaliciousPackages": 95,
     "totalCampaigns": 3,
-    "notes": "Database should be updated weekly by checking GitHub Advisories, Socket.dev, and Snyk vulnerability database."
+    "notes": "Database should be updated weekly by checking GitHub Advisories, Socket.dev, Snyk, and security blogs."
   }
 }
-
