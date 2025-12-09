@@ -1,8 +1,8 @@
-# npm Security Scanner
+# PNPM Security Scanner
 
 Detect compromised npm packages in your Node.js projects.
 
-A fast, zero-dependency CLI tool that scans your dependencies against a database of known malicious packages.
+A fast, zero-dependency CLI tool that scans your dependencies against a database of known malicious packages. Works with **npm**, **pnpm**, and **yarn** — any project with a `package.json`.
 
 > **Inspired by the [Shai-Hulud npm worm](https://socket.dev/blog/shai-hulud-npm-worm)** — a self-replicating malware that infected 187+ packages with 2M+ weekly downloads in September 2025.
 
@@ -38,6 +38,8 @@ Add to `package.json`:
 
 ```bash
 # Quick scan
+npm run security:scan
+# or
 pnpm run security:scan
 
 # Detailed output
@@ -54,11 +56,12 @@ pnpm run security:scan --strict
 
 ## What It Detects
 
-- **42+ confirmed malicious packages**
+- **96+ known malicious packages**
 - **Shai-Hulud malware** (187+ packages)
-- **Crypto hijacking** (18 packages)
+- **PhantomRaven campaign** (126 packages)
 - **Typosquatting variants**
 - **Credential theft packages**
+- **Crypto mining malware**
 
 ---
 
