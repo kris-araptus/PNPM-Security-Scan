@@ -1,0 +1,56 @@
+{
+  "name": "@kris-araptus/npm-security-scanner",
+  "version": "1.0.0",
+  "description": "A fast, configurable CLI tool that scans your dependencies against a continuously-updated database of known compromised npm packages",
+  "main": "scripts/security-scan.js",
+  "bin": {
+    "security-scan": "./scripts/security-scan.js"
+  },
+  "scripts": {
+    "security:scan": "node scripts/security-scan.js",
+    "security:scan:verbose": "node scripts/security-scan.js --verbose",
+    "security:scan:json": "node scripts/security-scan.js --json",
+    "security:scan:strict": "node scripts/security-scan.js --strict",
+    "security:audit": "pnpm audit --prod && node scripts/security-scan.js",
+    "security:full": "pnpm audit; pnpm outdated || true; node scripts/security-scan.js --verbose",
+    "test": "node --test tests/security-scan.test.js",
+    "test:verbose": "node --test --test-reporter spec tests/security-scan.test.js",
+    "test:scan": "node scripts/security-scan.js --verbose"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "24.10.2",
+    "typescript": "^5.9.3"
+  },
+  "keywords": [
+    "security",
+    "npm",
+    "scanner",
+    "malware",
+    "supply-chain",
+    "shai-hulud",
+    "cli",
+    "audit",
+    "dependencies",
+    "vulnerability"
+  ],
+  "author": "Kris Araptus",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "scripts/",
+    "security/",
+    "docs/",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kris-araptus/npm-security-scanner"
+  },
+  "bugs": {
+    "url": "https://github.com/kris-araptus/npm-security-scanner/issues"
+  },
+  "homepage": "https://github.com/kris-araptus/npm-security-scanner#readme"
+}
