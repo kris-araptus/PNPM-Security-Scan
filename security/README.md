@@ -11,15 +11,17 @@
 ```bash
 # Quick scan
 pnpm run security:scan
+# or
+npm run security:scan
 
 # Detailed scan (shows each package)
-pnpm run security:scan:verbose
+pnpm run security:scan --verbose
 
 # JSON output (for CI/CD)
-pnpm run security:scan:json
+pnpm run security:scan --json
 
 # Strict mode (fails on any risk level)
-pnpm run security:scan:strict
+pnpm run security:scan --strict
 ```
 
 ---
@@ -79,11 +81,27 @@ pnpm run security:scan:strict
 
 **Location:** `security/compromised-packages.json`
 
-**Current Coverage:**
-- 42+ known malicious packages
-- 3 major 2025 attack campaigns
-- Typosquatting protection
-- Version-specific threats
+**Current Coverage (v1.2.0):**
+- 96+ known malicious packages
+- 5 major 2025 attack campaigns
+- Typosquatting protection (65+ variants)
+- Credential theft detection
+- Crypto malware detection
+- Version-specific compromises
+
+### Campaigns Tracked
+
+| Campaign | Date | Impact |
+|----------|------|--------|
+| Shai-Hulud Malware | Sep/Nov 2025 | 700+ packages |
+| Credential Phishing | Jul 2025 | eslint-prettier ecosystem |
+| Gluestack RAT | Jun 2025 | 17 @react-native-aria packages |
+| PhantomRaven | Aug 2025 | 126 packages |
+| Token Farming | Nov 2025 | 150,000+ fake packages |
+
+---
+
+## ✏️ Customization
 
 ### Adding a Threat
 
@@ -94,10 +112,10 @@ Edit `security/compromised-packages.json`:
   "knownMalicious": {
     "confirmed": [
       "existing-package",
-      "new-malicious-package"  // Add here
+      "new-malicious-package"
     ]
   },
-  "lastUpdated": "2025-12-09"  // Update this
+  "lastUpdated": "2025-12-10"
 }
 ```
 
@@ -133,14 +151,6 @@ Edit `security/compromised-packages.json`:
 
 ---
 
-## 📚 More Documentation
-
-- **Complete Guide:** `docs/SECURITY-SCANNER.md`
-- **AI Prompt:** `README-SECURITY-SCANNER.md`
-- **Quick Reference:** `PROMPT-SECURITY-SCANNER.md`
-
----
-
 ## 🆘 Troubleshooting
 
 **Scanner won't run:**
@@ -159,5 +169,4 @@ Add to `trustedPackages.packages` in the database.
 
 ---
 
-**Version:** 1.0.0 | **Updated:** December 9, 2025
-
+**Version:** 1.2.0 | **Updated:** December 10, 2025
