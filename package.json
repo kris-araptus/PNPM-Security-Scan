@@ -4,13 +4,18 @@
   "description": "A fast, configurable CLI tool that scans your dependencies against a continuously-updated database of known compromised npm packages",
   "main": "scripts/security-scan.js",
   "bin": {
-    "security-scan": "./scripts/security-scan.js"
+    "security-scan": "./scripts/security-scan.js",
+    "security-scan-all": "./scripts/scan-all.js"
   },
   "scripts": {
     "security:scan": "node scripts/security-scan.js",
     "security:scan:verbose": "node scripts/security-scan.js --verbose",
     "security:scan:json": "node scripts/security-scan.js --json",
     "security:scan:strict": "node scripts/security-scan.js --strict",
+    "security:scan:deep": "node scripts/security-scan.js --deep",
+    "security:scan:report": "node scripts/security-scan.js --report",
+    "security:scan:all": "node scripts/scan-all.js --from-list",
+    "security:scan:dir": "node scripts/scan-all.js",
     "security:audit": "pnpm audit --prod && node scripts/security-scan.js",
     "security:full": "pnpm audit; pnpm outdated || true; node scripts/security-scan.js --verbose",
     "test": "node --test tests/security-scan.test.js",
@@ -42,8 +47,9 @@
   "files": [
     "scripts/",
     "security/",
-    "docs/",
-    "README.md"
+    "README.md",
+    ".securityscanrc.example.json",
+    "projects.example.json"
   ],
   "repository": {
     "type": "git",

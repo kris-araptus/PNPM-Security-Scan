@@ -11,15 +11,22 @@ A fast, zero-dependency CLI tool that scans your dependencies against a database
 ## Quick Start
 
 ```bash
-# Copy to your project
-cp scripts/security-scan.js your-project/scripts/
-cp -r security/ your-project/security/
+# Clone or copy to your project
+git clone https://github.com/your-repo/pnpm-security-scan.git
+cd pnpm-security-scan
 
-# Make executable
-chmod +x scripts/security-scan.js
+# Install (optional - zero dependencies for core scanner)
+pnpm install
 
 # Run
 node scripts/security-scan.js
+```
+
+Or copy the scanner into an existing project:
+
+```bash
+cp scripts/security-scan.js your-project/scripts/
+cp -r security/ your-project/security/
 ```
 
 Add to `package.json`:
@@ -38,30 +45,151 @@ Add to `package.json`:
 
 ```bash
 # Quick scan
-npm run security:scan
-# or
 pnpm run security:scan
 
-# Detailed output
-pnpm run security:scan --verbose
+# Verbose output
+pnpm run security:scan -- --verbose
 
-# JSON output (CI/CD)
-pnpm run security:scan --json
+# Scan all dependencies (including transitive)
+pnpm run security:scan -- --deep
 
-# Strict mode (fail on any risk)
-pnpm run security:scan --strict
+# Check postinstall scripts for suspicious patterns
+pnpm run security:scan -- --analyze-scripts
+
+# Generate HTML report
+pnpm run security:scan -- --report
+
+# JSON output (for CI/CD pipelines)
+pnpm run security:scan -- --json
+
+# Ignore specific packages
+pnpm run security:scan -- --ignore pkg1,pkg2
+
+# Auto-fix (remove malicious packages)
+pnpm run security:scan -- --fix --yes
 ```
+
+---
+
+## CLI Options
+
+| Option | Description |
+|--------|-------------|
+| `--verbose, -v` | Show detailed output |
+| `--deep` | Scan transitive dependencies (node_modules) |
+| `--analyze-scripts` | Check postinstall scripts for suspicious patterns |
+| `--strict` | Fail on any risk level |
+| `--json` | JSON output for parsing |
+| `--silent, -s` | Suppress output (exit code only) |
+| `--report` | Generate `security-report.html` |
+| `--ignore <pkgs>` | Comma-separated packages to skip |
+| `--fix` | Remove malicious packages |
+| `--yes, -y` | Auto-confirm --fix |
+| `--version, -V` | Show version |
+
+---
+
+## Multi-Project Scanning
+
+Scan multiple Node.js projects at once using `scan-all.js`.
+
+### Scan a Directory
+
+```bash
+# Scan all projects in ~/Software
+node scripts/scan-all.js ~/Software
+
+# Limit search depth
+node scripts/scan-all.js ~/code --depth 2
+
+# Parallel scanning (faster for many projects)
+node scripts/scan-all.js ~/projects --parallel
+```
+
+### Manage a Projects List
+
+Build a reusable list of projects to scan regularly:
+
+```bash
+# Add all projects from a directory
+node scripts/scan-all.js --add-all ~/Software
+
+# Or add individual projects
+node scripts/scan-all.js --add ~/projects/app-1
+node scripts/scan-all.js --add ~/projects/app-2
+
+# View your list
+node scripts/scan-all.js --show-list
+
+# Remove a project
+node scripts/scan-all.js --remove ~/projects/old-app
+
+# Scan from saved list
+node scripts/scan-all.js --from-list
+```
+
+**List location priority:**
+1. `./projects.json` (local, in current directory)
+2. `~/.security-scan-projects.json` (global fallback)
+
+### Example Output
+
+```
+🔍 Scanning projects from list...
+Projects: 53
+
+  ✓ Clean project-a
+  ✓ Clean project-b
+  ✗ 2 issues project-c (1 critical, 1 high)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  📊 SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Projects scanned:  53
+  Clean:             52
+  With issues:       1
+  Packages scanned:  1518
+```
+
+---
+
+## Configuration
+
+Create a `.securityscanrc.json` file in your project root for persistent settings:
+
+```json
+{
+  "ignore": ["package-to-skip"],
+  "failOn": ["critical", "high"],
+  "scanDeep": false,
+  "analyzeScripts": false,
+  "trustedPackages": ["@my-org/*"],
+  "verbose": false,
+  "strict": false
+}
+```
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `ignore` | `string[]` | Packages to skip during scan |
+| `failOn` | `string[]` | Severity levels that cause exit code 1 |
+| `scanDeep` | `boolean` | Scan transitive dependencies |
+| `analyzeScripts` | `boolean` | Check postinstall scripts |
+| `trustedPackages` | `string[]` | Glob patterns for trusted packages |
+| `verbose` | `boolean` | Detailed output |
+| `strict` | `boolean` | Fail on any risk level |
 
 ---
 
 ## What It Detects
 
-- **96+ known malicious packages**
-- **Shai-Hulud malware** (187+ packages)
-- **PhantomRaven campaign** (126 packages)
-- **Typosquatting variants**
-- **Credential theft packages**
-- **Crypto mining malware**
+- **96+ known malicious packages** — confirmed threats from npm advisories
+- **5 major 2025 attack campaigns** — Shai-Hulud, PhantomRaven, Gluestack RAT, and more
+- **Version-specific compromises** — only flags affected versions, not entire packages
+- **Typosquatting variants** — common misspellings of popular packages
+- **Credential theft packages** — packages designed to steal tokens and keys
+- **Crypto mining malware** — hidden miners in dependencies
+- **Suspicious postinstall scripts** — detects eval, network calls, obfuscation
 
 ---
 
@@ -69,23 +197,55 @@ pnpm run security:scan --strict
 
 | Code | Meaning |
 |------|---------|
-| `0` | Clean |
-| `1` | Issues found |
-| `2` | Error |
+| `0` | Clean — no issues found |
+| `1` | Issues found — malicious packages detected |
+| `2` | Error — configuration or runtime error |
+
+Use in CI/CD:
+
+```yaml
+- run: node scripts/security-scan.js --json
+  continue-on-error: false
+```
 
 ---
 
-## Update Threat Database
+## Threat Database
 
-Edit `security/compromised-packages.json`:
+The threat database is at `security/compromised-packages.json`. It includes:
 
-```json
-{
-  "knownMalicious": {
-    "confirmed": ["new-bad-package"]
-  },
-  "lastUpdated": "2025-12-09"
-}
+- `knownMalicious.confirmed` — packages confirmed as malicious
+- `knownMalicious.typosquatting` — typosquatting variants
+- `knownMalicious.credentialTheft` — token/credential stealers
+- `knownMalicious.cryptoMalware` — crypto mining packages
+- `campaigns` — coordinated attack campaigns with affected versions
+- `trustedPackages` — allowlist of known-safe packages
+
+### Update the Database
+
+```bash
+# Manual update
+# Edit security/compromised-packages.json
+
+# Or check for updates online
+# (coming soon: --update flag)
+```
+
+---
+
+## Project Structure
+
+```
+├── scripts/
+│   ├── security-scan.js    # Main scanner CLI
+│   └── scan-all.js         # Multi-project scanner
+├── security/
+│   └── compromised-packages.json  # Threat database
+├── tests/
+│   └── security-scan.test.js      # Unit tests
+├── .securityscanrc.json    # Your config (create from example)
+├── projects.json           # Your projects list (create from example)
+└── README.md
 ```
 
 ---
