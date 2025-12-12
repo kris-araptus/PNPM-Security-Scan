@@ -1,5 +1,5 @@
 {
-  "name": "@kris-araptus/npm-security-scanner",
+  "name": "@araptus/npm-security-scanner",
   "version": "1.2.0",
   "description": "A fast, configurable CLI tool that scans your dependencies against a continuously-updated database of known compromised npm packages",
   "main": "scripts/security-scan.js",
@@ -24,7 +24,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@types/node": "24.10.2",
+    "@types/node": "25.0.1",
     "typescript": "^5.9.3"
   },
   "keywords": [
@@ -53,10 +53,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/kris-araptus/npm-security-scanner"
+    "url": "https://github.com/araptus/npm-security-scanner"
   },
   "bugs": {
-    "url": "https://github.com/kris-araptus/npm-security-scanner/issues"
+    "url": "https://github.com/araptus/npm-security-scanner/issues"
   },
-  "homepage": "https://github.com/kris-araptus/npm-security-scanner#readme"
+  "homepage": "https://araptus.com"
 }
