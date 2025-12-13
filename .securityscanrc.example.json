@@ -1,0 +1,11 @@
+{
+  "ignore": [],
+  "failOn": ["critical", "high"],
+  "scanDeep": false,
+  "analyzeScripts": false,
+  "trustedPackages": [],
+  "verbose": false,
+  "strict": false
+}
+
+

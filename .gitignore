@@ -26,6 +26,12 @@ build/
 .vercel/
 .astro/
 
+# Generated reports
+security-report.html
+
+# Personal projects list (contains local paths)
+projects.json
+
 # Test coverage
 coverage/
 
@@ -34,5 +40,11 @@ coverage/
 .env.local
 .env.*.local
 
-docs/*
+# Internal development docs (not for npm)
+docs/PROMPT-SECURITY-SCANNER.md
+docs/DOCUMENTATION-SUMMARY.md
+docs/README-SECURITY-SCANNER.md
+
+# Internal notes
+src/
 

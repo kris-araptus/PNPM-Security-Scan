@@ -139,7 +139,7 @@ describe('CLI Interface', () => {
   it('should show help with --help', async () => {
     const { code, stdout } = await runScanner(['--help']);
     assert.strictEqual(code, 0, 'Should exit with code 0');
-    assert.ok(stdout.includes('npm Security Scanner'), 'Should show title');
+    assert.ok(stdout.includes('PNPM Security Scanner'), 'Should show title');
     assert.ok(stdout.includes('--verbose'), 'Should show verbose option');
     assert.ok(stdout.includes('--json'), 'Should show json option');
     assert.ok(stdout.includes('--strict'), 'Should show strict option');
@@ -148,7 +148,7 @@ describe('CLI Interface', () => {
   it('should show help with -h', async () => {
     const { code, stdout } = await runScanner(['-h']);
     assert.strictEqual(code, 0, 'Should exit with code 0');
-    assert.ok(stdout.includes('npm Security Scanner'), 'Should show title');
+    assert.ok(stdout.includes('PNPM Security Scanner'), 'Should show title');
   });
   
   it('should accept --verbose flag', async () => {
@@ -565,7 +565,7 @@ describe('Pattern Matching', () => {
     try {
       const { stdout } = await runScanner(['--verbose'], fixtureDir);
       // @types/* and @astrojs/* should be trusted
-      const trustedCount = (stdout.match(/- Trusted/g) || []).length;
+      const trustedCount = (stdout.match(/Trusted/g) || []).length;
       assert.ok(trustedCount >= 3, 'Should recognize multiple trusted scoped packages');
     } finally {
       removeFixture(fixtureName);

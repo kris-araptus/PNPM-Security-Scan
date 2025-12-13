@@ -1,10 +1,11 @@
 {
-  "name": "@kris-araptus/npm-security-scanner",
+  "name": "@araptus/npm-security-scanner",
   "version": "2.0.0",
   "description": "A fast, configurable CLI tool that scans your dependencies against a continuously-updated database of known compromised npm packages. Supports deep scanning of transitive dependencies via lock files.",
   "main": "scripts/security-scan.js",
   "bin": {
-    "security-scan": "./scripts/security-scan.js"
+    "security-scan": "./scripts/security-scan.js",
+    "security-scan-all": "./scripts/scan-all.js"
   },
   "scripts": {
     "security:scan": "node scripts/security-scan.js",
@@ -14,6 +15,9 @@
     "security:scan:deep": "node scripts/security-scan.js --deep",
     "security:scan:deep:verbose": "node scripts/security-scan.js --deep --verbose",
     "security:scan:deep:strict": "node scripts/security-scan.js --deep --strict",
+    "security:scan:report": "node scripts/security-scan.js --report",
+    "security:scan:all": "node scripts/scan-all.js --from-list",
+    "security:scan:dir": "node scripts/scan-all.js",
     "security:audit": "pnpm audit --prod && node scripts/security-scan.js --deep",
     "security:full": "pnpm audit; pnpm outdated || true; node scripts/security-scan.js --deep --verbose",
     "test": "node --test tests/security-scan.test.js",
@@ -22,7 +26,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@types/node": "24.10.2",
+    "@types/node": "25.0.1",
     "typescript": "^5.9.3"
   },
   "keywords": [
@@ -45,15 +49,16 @@
   "files": [
     "scripts/",
     "security/",
-    "docs/",
-    "README.md"
+    "README.md",
+    ".securityscanrc.example.json",
+    "projects.example.json"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/kris-araptus/npm-security-scanner"
+    "url": "https://github.com/araptus/npm-security-scanner"
   },
   "bugs": {
-    "url": "https://github.com/kris-araptus/npm-security-scanner/issues"
+    "url": "https://github.com/araptus/npm-security-scanner/issues"
   },
-  "homepage": "https://github.com/kris-araptus/npm-security-scanner#readme"
+  "homepage": "https://araptus.com"
 }

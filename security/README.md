@@ -11,6 +11,8 @@
 ```bash
 # Quick scan (direct dependencies)
 pnpm run security:scan
+# or
+npm run security:scan
 
 # Deep scan (all transitive dependencies)
 pnpm run security:scan --deep
@@ -103,13 +105,27 @@ This catches malicious packages hidden in your dependency tree.
 
 **Location:** `security/compromised-packages.json`
 
-**Current Coverage:**
+**Current Coverage (v2.0.0):**
 - 137+ unique malicious packages
-- 3 major 2025 attack campaigns
+- 5 major 2025 attack campaigns
 - 66 typosquatting variants
 - 25 credential theft packages
 - 13 crypto malware packages
 - Version-specific threat detection
+
+### Campaigns Tracked
+
+| Campaign | Date | Impact |
+|----------|------|--------|
+| Shai-Hulud Malware | Sep/Nov 2025 | 700+ packages |
+| Credential Phishing | Jul 2025 | eslint-prettier ecosystem |
+| Gluestack RAT | Jun 2025 | 17 @react-native-aria packages |
+| PhantomRaven | Aug 2025 | 126 packages |
+| Token Farming | Nov 2025 | 150,000+ fake packages |
+
+---
+
+## ✏️ Customization
 
 ### Adding a Threat
 
@@ -123,7 +139,7 @@ Edit `security/compromised-packages.json`:
       "new-malicious-package"
     ]
   },
-  "lastUpdated": "2025-12-09"
+  "lastUpdated": "2025-12-13"
 }
 ```
 
@@ -184,4 +200,3 @@ Add to `trustedPackages.packages` in the database.
 ---
 
 **Version:** 2.0.0 | **Updated:** December 2025
-

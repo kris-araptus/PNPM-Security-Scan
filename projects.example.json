@@ -1,0 +1,11 @@
+{
+  "description": "List of projects to scan with scan-all.js --from-list",
+  "projects": [
+    "~/software/project-a",
+    "~/projects/project-b",
+    "~/code/my-app",
+    "/absolute/path/to/project"
+  ]
+}
+
+
