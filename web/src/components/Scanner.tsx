@@ -340,46 +340,46 @@ function ScanResults({ result, onReset, fileName }: { result: ScanResult; onRese
         <div className={`absolute inset-0 opacity-10 ${hasIssues ? 'bg-gradient-to-br from-alert/20 to-transparent' : 'bg-gradient-to-br from-safe/20 to-transparent'}`} />
         
         <div className="relative z-10">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
               <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
                 hasIssues ? 'bg-alert/10 animate-pulse' : 'bg-safe/10'
-              }`}>
-                {hasIssues ? (
+            }`}>
+              {hasIssues ? (
                   <svg className="w-8 h-8 text-alert" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              ) : (
                   <svg className="w-8 h-8 text-safe" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                )}
-              </div>
-              <div>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+            </div>
+            <div>
                 <h2 className={`text-3xl font-bold ${hasIssues ? 'text-alert' : 'text-safe'}`}>
-                  {hasIssues ? `${result.totalIssues} Issue${result.totalIssues > 1 ? 's' : ''} Found` : 'All Clear!'}
-                </h2>
+                {hasIssues ? `${result.totalIssues} Issue${result.totalIssues > 1 ? 's' : ''} Found` : 'All Clear!'}
+              </h2>
                 <p className="text-text-secondary flex flex-wrap items-center gap-2">
-                  Scanned {result.packagesScanned.total} packages
-                  {result.scanMode === 'deep' && (
+                Scanned {result.packagesScanned.total} packages
+                {result.scanMode === 'deep' && (
                     <span className="px-2 py-0.5 rounded-full text-xs bg-info/15 text-info border border-info/30">
                       🔬 Deep Scan via {result.lockFile}
                     </span>
-                  )}
-                </p>
-              </div>
+                )}
+              </p>
             </div>
-            
-            <button onClick={onReset} className="btn-secondary flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Scan Another
-            </button>
           </div>
+          
+            <button onClick={onReset} className="btn-secondary flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Scan Another
+          </button>
+        </div>
 
           {/* Stats Grid with visual enhancements */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
             <StatCard label="Total" value={result.packagesScanned.total} icon="📦" />
             <StatCard label="Direct" value={result.packagesScanned.direct} icon="📍" />
             <StatCard label="Transitive" value={result.packagesScanned.transitive} icon="🔗" color="info" />
@@ -426,7 +426,7 @@ function ScanResults({ result, onReset, fileName }: { result: ScanResult; onRese
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
                   )}
-                </div>
+            </div>
                 <code className="text-xs text-araptus-glow font-mono block truncate">
                   {getRemovalCommand(pm)}
                 </code>
@@ -444,7 +444,7 @@ function ScanResults({ result, onReset, fileName }: { result: ScanResult; onRese
       {hasIssues && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-text-primary">Detected Threats</h3>
+          <h3 className="text-lg font-semibold text-text-primary">Detected Threats</h3>
             <span className="text-text-muted text-sm">
               {result.transitiveIssues > 0 && (
                 <span className="text-info">{result.transitiveIssues} in transitive deps</span>
@@ -514,7 +514,7 @@ function StatCard({ label, value, icon, color = 'default' }: { label: string; va
     <div className="p-4 rounded-xl bg-gradient-to-br from-slate-mid/30 to-obsidian border border-slate-dark/50">
       <div className="flex items-center gap-2 mb-1">
         <span className="text-lg">{icon}</span>
-        <p className="text-text-muted text-sm">{label}</p>
+      <p className="text-text-muted text-sm">{label}</p>
       </div>
       <p className={`text-3xl font-bold font-mono ${colorClasses[color as keyof typeof colorClasses] || colorClasses.default}`}>
         {value.toLocaleString()}

@@ -1,6 +1,6 @@
 {
-  "version": "1.2.0",
-  "lastUpdated": "2025-12-10",
+  "version": "2.0.0",
+  "lastUpdated": "2025-12-13",
   "sources": [
     "https://github.com/advisories?query=ecosystem%3Anpm",
     "https://socket.dev/blog",
@@ -154,12 +154,6 @@
       "ua-parser-js",
       "coa",
       "rc",
-      "colors",
-      "faker",
-      "node-ipc",
-      "peacenotwar",
-      "es5-ext",
-      "left-pad",
       "discord.js-selfbot-v11",
       "discord-lofy",
       "discord-selfbot-v14",
@@ -189,6 +183,41 @@
       "crypto-wallet-finder",
       "wallet-tools-eth"
     ],
+    
+    "protestware": {
+      "description": "Packages intentionally sabotaged by maintainers as a form of protest. Impact varies from annoying to destructive, but these are not traditional malware designed to steal data.",
+      "high": {
+        "description": "Destructive protestware that can delete or corrupt files",
+        "packages": [
+          "node-ipc",
+          "peacenotwar"
+        ],
+        "details": {
+          "node-ipc": "March 2022: Added code to overwrite files with heart emojis on systems with Russian/Belarusian IP addresses (Ukraine protest). Destructive behavior.",
+          "peacenotwar": "Dependency of node-ipc with same file-overwriting behavior targeting Russian/Belarusian IPs."
+        }
+      },
+      "medium": {
+        "description": "Protestware causing denial of service (infinite loops, crashes) but no data loss",
+        "packages": [
+          "colors",
+          "faker"
+        ],
+        "details": {
+          "colors": "January 2022: Maintainer added infinite loop printing 'LIBERTY LIBERTY LIBERTY' as protest against corporations. Causes application hang, no data theft.",
+          "faker": "January 2022: Same maintainer, same protest. Infinite loop causing DoS. Package deprecated, use @faker-js/faker instead."
+        }
+      },
+      "low": {
+        "description": "Protestware with messages or minor annoyances, no functional impact",
+        "packages": [
+          "es5-ext"
+        ],
+        "details": {
+          "es5-ext": "Added console message about Ukraine war. No malicious functionality, just a political statement in output."
+        }
+      }
+    },
     
     "typosquatting": [
       "loadash",
@@ -322,6 +351,7 @@
       "@aws-sdk/*",
       "@azure/*",
       "@google-cloud/*",
+      "@faker-js/faker",
       "typescript",
       "react",
       "react-dom",
@@ -411,10 +441,12 @@
   
   "metadata": {
     "maintainer": "Kris Araptus",
+    "contributors": ["Jeremiah Coakley / FEDLIN"],
     "updateFrequency": "Weekly",
     "lastReviewDate": "2025-12-13",
-    "totalMaliciousPackages": 137,
+    "totalMaliciousPackages": 132,
+    "totalProtestware": 5,
     "totalCampaigns": 5,
-    "notes": "Database updated with December 2025 findings. Campaigns now include version-specific compromises for legitimate packages that were temporarily hijacked. Count: 40 confirmed + 66 typosquatting + 25 credential theft + 13 crypto malware = 137 unique."
+    "notes": "Database v2.0.0: Separated protestware from confirmed malware with appropriate severity levels. Protestware (colors, faker, node-ipc, peacenotwar, es5-ext) now categorized by actual impact rather than blanket 'critical'. Removed left-pad (not malicious, just unpublished). Count: 35 confirmed + 66 typosquatting + 25 credential theft + 13 crypto malware = 132 malware + 5 protestware."
   }
 }

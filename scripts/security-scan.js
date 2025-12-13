@@ -927,6 +927,45 @@ function checkPackage(packageName, version, db, depInfo = null, config = {}) {
     };
   }
   
+  // Check protestware (with appropriate severity based on impact)
+  const protestware = malicious.protestware || {};
+  
+  // High severity protestware (destructive - deletes/corrupts files)
+  if (protestware.high?.packages?.includes(packageName)) {
+    const details = protestware.high.details?.[packageName] || 'Destructive protestware';
+    return {
+      ...baseIssue,
+      severity: 'high',
+      type: 'Protestware (Destructive)',
+      reason: details,
+      action: 'REMOVE - Can delete or corrupt files on affected systems',
+    };
+  }
+  
+  // Medium severity protestware (DoS - infinite loops, crashes)
+  if (protestware.medium?.packages?.includes(packageName)) {
+    const details = protestware.medium.details?.[packageName] || 'DoS protestware';
+    return {
+      ...baseIssue,
+      severity: 'medium',
+      type: 'Protestware (DoS)',
+      reason: details,
+      action: 'REMOVE - Causes application hang or crash. Use alternative package.',
+    };
+  }
+  
+  // Low severity protestware (messages only, no functional impact)
+  if (protestware.low?.packages?.includes(packageName)) {
+    const details = protestware.low.details?.[packageName] || 'Protestware with political message';
+    return {
+      ...baseIssue,
+      severity: 'low',
+      type: 'Protestware (Message)',
+      reason: details,
+      action: 'OPTIONAL - No malicious behavior, contains political message only',
+    };
+  }
+  
   // Check campaigns with version matching
   const campaigns = db.campaigns || {};
   for (const [campaignId, campaign] of Object.entries(campaigns)) {
