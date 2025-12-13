@@ -35,7 +35,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 // Package version
-const SCANNER_VERSION = '1.2.0';
+const SCANNER_VERSION = '2.0.0';
 
 // ANSI color codes for terminal output
 const colors = {
