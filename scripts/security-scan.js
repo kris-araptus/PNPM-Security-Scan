@@ -664,119 +664,74 @@ function mergeDependencies(directDeps, lockPackages) {
 }
 
 /**
- * Parse pnpm-lock.yaml to get exact versions
- */
-function parsePnpmLock(lockPath) {
-  const versions = {};
-  
-  try {
-    const content = fs.readFileSync(lockPath, 'utf8');
-    const lines = content.split('\n');
-    
-    // Simple YAML parsing for pnpm-lock.yaml
-    let currentPackage = null;
-    
-    for (const line of lines) {
-      // Match package entries like "  lodash@4.17.21:"
-      const pkgMatch = line.match(/^\s{2}'?([^:@]+)@([^:]+)'?:/);
-      if (pkgMatch) {
-        const [, name, version] = pkgMatch;
-        versions[name] = version.replace(/'/g, '');
-      }
-      
-      // Match packages section entries
-      const packagesMatch = line.match(/^\s{4}'?\/([^@]+)@([^(']+)/);
-      if (packagesMatch) {
-        const [, name, version] = packagesMatch;
-        versions[name] = version.replace(/'/g, '').replace(/:$/, '');
-      }
-    }
-  } catch (error) {
-    if (options.verbose) {
-      log(`${colors.dim}Could not parse pnpm-lock.yaml: ${error.message}${colors.reset}`);
-    }
-  }
-  
-  return versions;
-}
-
-/**
- * Parse package-lock.json to get exact versions
- */
-function parseNpmLock(lockPath) {
-  const versions = {};
-  
-  try {
-    const content = fs.readFileSync(lockPath, 'utf8');
-    const lock = JSON.parse(content);
-    
-    // npm lockfile v2/v3
-    if (lock.packages) {
-      for (const [pkgPath, pkg] of Object.entries(lock.packages)) {
-        if (pkgPath === '') continue; // Skip root
-        const name = pkgPath.replace('node_modules/', '').replace(/^.*node_modules\//, '');
-        if (pkg.version) {
-          versions[name] = pkg.version;
-        }
-      }
-    }
-    
-    // npm lockfile v1
-    if (lock.dependencies) {
-      function extractDeps(deps, prefix = '') {
-        for (const [name, dep] of Object.entries(deps)) {
-          if (dep.version) {
-            versions[name] = dep.version;
-          }
-          if (dep.dependencies) {
-            extractDeps(dep.dependencies);
-          }
-        }
-      }
-      extractDeps(lock.dependencies);
-    }
-  } catch (error) {
-    if (options.verbose) {
-      log(`${colors.dim}Could not parse package-lock.json: ${error.message}${colors.reset}`);
-    }
-  }
-  
-  return versions;
-}
-
-/**
- * Get exact versions from lock files
+ * Get exact versions from lock files (for version matching in direct deps)
+ * This is separate from loadLockFile() which does full deep scanning
  */
 function getLockedVersions() {
   const projectRoot = findProjectRoot();
+  const versions = {};
   
   // Try pnpm-lock.yaml first
-  const pnpmLock = path.join(projectRoot, 'pnpm-lock.yaml');
-  if (fs.existsSync(pnpmLock)) {
+  const pnpmLockPath = path.join(projectRoot, 'pnpm-lock.yaml');
+  if (fs.existsSync(pnpmLockPath)) {
     if (options.verbose) {
       log(`${colors.dim}Reading versions from pnpm-lock.yaml${colors.reset}`);
     }
-    return parsePnpmLock(pnpmLock);
+    try {
+      const content = fs.readFileSync(pnpmLockPath, 'utf8');
+      const packages = parsePnpmLock(content);
+      for (const [name, info] of packages) {
+        versions[name] = info.version;
+      }
+      return versions;
+    } catch (error) {
+      if (options.verbose) {
+        log(`${colors.dim}Could not parse pnpm-lock.yaml: ${error.message}${colors.reset}`);
+      }
+    }
   }
   
   // Try package-lock.json
-  const npmLock = path.join(projectRoot, 'package-lock.json');
-  if (fs.existsSync(npmLock)) {
+  const npmLockPath = path.join(projectRoot, 'package-lock.json');
+  if (fs.existsSync(npmLockPath)) {
     if (options.verbose) {
       log(`${colors.dim}Reading versions from package-lock.json${colors.reset}`);
     }
-    return parseNpmLock(npmLock);
-  }
-  
-  // Try yarn.lock (basic support)
-  const yarnLock = path.join(projectRoot, 'yarn.lock');
-  if (fs.existsSync(yarnLock)) {
-    if (options.verbose) {
-      log(`${colors.dim}yarn.lock found but not fully supported, using package.json versions${colors.reset}`);
+    try {
+      const content = fs.readFileSync(npmLockPath, 'utf8');
+      const packages = parseNpmLock(content);
+      for (const [name, info] of packages) {
+        versions[name] = info.version;
+      }
+      return versions;
+    } catch (error) {
+      if (options.verbose) {
+        log(`${colors.dim}Could not parse package-lock.json: ${error.message}${colors.reset}`);
+      }
     }
   }
   
-  return {};
+  // Try yarn.lock (basic support)
+  const yarnLockPath = path.join(projectRoot, 'yarn.lock');
+  if (fs.existsSync(yarnLockPath)) {
+    if (options.verbose) {
+      log(`${colors.dim}Reading versions from yarn.lock${colors.reset}`);
+    }
+    try {
+      const content = fs.readFileSync(yarnLockPath, 'utf8');
+      const packages = parseYarnLock(content);
+      for (const [name, info] of packages) {
+        versions[name] = info.version;
+      }
+      return versions;
+    } catch (error) {
+      if (options.verbose) {
+        log(`${colors.dim}Could not parse yarn.lock: ${error.message}${colors.reset}`);
+      }
+    }
+  }
+  
+  return versions;
 }
 
 /**
