@@ -8,6 +8,14 @@ A fast, zero-dependency CLI tool that scans your dependencies against a database
 
 ---
 
+## 🌐 Web UI
+
+Try the scanner without installing anything: **[security-scanner.araptus.com](https://security-scanner.araptus.com)**
+
+Just drag & drop your `package.json` or lock file and get instant results.
+
+---
+
 ## Quick Start
 
 ```bash
@@ -44,14 +52,14 @@ Add to `package.json`:
 ## Usage
 
 ```bash
-# Quick scan
+# Quick scan (direct dependencies only)
 pnpm run security:scan
 
-# Verbose output
-pnpm run security:scan -- --verbose
+# Deep scan (all transitive dependencies via lock file)
+pnpm run security:scan --deep
 
-# Scan all dependencies (including transitive)
-pnpm run security:scan -- --deep
+# Detailed output
+pnpm run security:scan --verbose
 
 # Check postinstall scripts for suspicious patterns
 pnpm run security:scan -- --analyze-scripts
@@ -64,6 +72,12 @@ pnpm run security:scan -- --json
 
 # Ignore specific packages
 pnpm run security:scan -- --ignore pkg1,pkg2
+
+# Strict mode (fail on any risk)
+pnpm run security:scan --strict
+
+# Combine flags
+pnpm run security:scan --deep --strict --json
 
 # Auto-fix (remove malicious packages)
 pnpm run security:scan -- --fix --yes
@@ -183,17 +197,48 @@ Create a `.securityscanrc.json` file in your project root for persistent setting
 
 ## What It Detects
 
-- **96+ known malicious packages** — confirmed threats from npm advisories
+- **137+ known malicious packages** — confirmed threats from npm advisories
 - **5 major 2025 attack campaigns** — Shai-Hulud, PhantomRaven, Gluestack RAT, and more
 - **Version-specific compromises** — only flags affected versions, not entire packages
-- **Typosquatting variants** — common misspellings of popular packages
-- **Credential theft packages** — packages designed to steal tokens and keys
-- **Crypto mining malware** — hidden miners in dependencies
+- **Typosquatting variants** (66 packages) — common misspellings of popular packages
+- **Credential theft packages** (25 packages) — packages designed to steal tokens and keys
+- **Crypto mining malware** (13 packages) — hidden miners in dependencies
 - **Suspicious postinstall scripts** — detects eval, network calls, obfuscation
 
 ---
 
-## Exit Codes
+## Deep Scanning
+
+Use `--deep` to scan **transitive dependencies** from your lock file. This is where most supply chain attacks hide.
+
+```bash
+pnpm run security:scan --deep
+```
+
+Supported lock files:
+- `pnpm-lock.yaml` (pnpm)
+- `package-lock.json` (npm)
+- `yarn.lock` (yarn)
+
+---
+
+## CI/CD Integration
+
+### GitHub Actions
+
+```yaml
+name: Security Scan
+on: [push, pull_request]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx @araptus/npm-security-scanner --deep --strict
+```
+
+### Exit Codes
 
 | Code | Meaning |
 |------|---------|
@@ -237,16 +282,30 @@ The threat database is at `security/compromised-packages.json`. It includes:
 
 ```
 ├── scripts/
-│   ├── security-scan.js    # Main scanner CLI
-│   └── scan-all.js         # Multi-project scanner
+│   ├── security-scan.js         # Main scanner CLI (zero dependencies)
+│   └── scan-all.js              # Multi-project batch scanner
 ├── security/
-│   └── compromised-packages.json  # Threat database
+│   ├── compromised-packages.json  # Threat database (137+ packages)
+│   └── README.md                # Quick start guide
 ├── tests/
-│   └── security-scan.test.js      # Unit tests
-├── .securityscanrc.json    # Your config (create from example)
-├── projects.json           # Your projects list (create from example)
-└── README.md
+│   └── security-scan.test.js    # Unit tests
+├── web/                         # Web UI (Astro + React + Tailwind)
+│   ├── src/
+│   │   ├── components/          # React components (Scanner.tsx)
+│   │   ├── lib/                 # Scanner logic + threat DB
+│   │   └── pages/               # Astro pages + API endpoints
+│   └── package.json
+├── .securityscanrc.json         # Your config (create from example)
+├── projects.json                # Your projects list (for scan-all.js)
+└── package.json
 ```
+
+---
+
+## Credits
+
+- **Kris Araptus** — Original scanner and threat database
+- **Jeremiah Coakley / FEDLIN** — Deep scanning and web UI
 
 ---
 

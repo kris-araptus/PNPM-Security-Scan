@@ -9,10 +9,13 @@
 ### Run a Scan
 
 ```bash
-# Quick scan
+# Quick scan (direct dependencies)
 pnpm run security:scan
 # or
 npm run security:scan
+
+# Deep scan (all transitive dependencies)
+pnpm run security:scan --deep
 
 # Detailed scan (shows each package)
 pnpm run security:scan --verbose
@@ -22,6 +25,9 @@ pnpm run security:scan --json
 
 # Strict mode (fails on any risk level)
 pnpm run security:scan --strict
+
+# Full deep scan with strict mode
+pnpm run security:scan --deep --strict
 ```
 
 ---
@@ -73,7 +79,25 @@ pnpm run security:scan --strict
 | `--verbose` | `-v` | Show detailed output |
 | `--json` | | JSON output for parsing |
 | `--strict` | | Fail on any risk level |
+| `--deep` | `-d` | Scan transitive dependencies from lock file |
 | `--help` | `-h` | Show help message |
+
+---
+
+## 🔬 Deep Scanning
+
+Use `--deep` to scan all transitive dependencies from your lock file:
+
+```bash
+pnpm run security:scan --deep
+```
+
+**Supported lock files:**
+- `pnpm-lock.yaml` (pnpm)
+- `package-lock.json` (npm)
+- `yarn.lock` (yarn)
+
+This catches malicious packages hidden in your dependency tree.
 
 ---
 
@@ -81,13 +105,13 @@ pnpm run security:scan --strict
 
 **Location:** `security/compromised-packages.json`
 
-**Current Coverage (v1.2.0):**
-- 96+ known malicious packages
+**Current Coverage (v2.0.0):**
+- 137+ unique malicious packages
 - 5 major 2025 attack campaigns
-- Typosquatting protection (65+ variants)
-- Credential theft detection
-- Crypto malware detection
-- Version-specific compromises
+- 66 typosquatting variants
+- 25 credential theft packages
+- 13 crypto malware packages
+- Version-specific threat detection
 
 ### Campaigns Tracked
 
@@ -115,7 +139,7 @@ Edit `security/compromised-packages.json`:
       "new-malicious-package"
     ]
   },
-  "lastUpdated": "2025-12-10"
+  "lastUpdated": "2025-12-13"
 }
 ```
 
@@ -139,8 +163,14 @@ Edit `security/compromised-packages.json`:
 ### GitHub Actions
 
 ```yaml
-- name: Security scan
-  run: pnpm run security:scan --strict
+name: Security Scan
+on: [push, pull_request]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx @kris-araptus/npm-security-scanner --deep --strict
 ```
 
 ### Exit Codes
@@ -169,4 +199,4 @@ Add to `trustedPackages.packages` in the database.
 
 ---
 
-**Version:** 1.2.0 | **Updated:** December 10, 2025
+**Version:** 2.0.0 | **Updated:** December 2025

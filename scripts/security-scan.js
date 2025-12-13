@@ -9,8 +9,24 @@
  * Built in response to the Shai-Hulud malware campaign (Sept 2025)
  * and other major supply chain attacks.
  * 
- * @version 1.2.0
+ * Usage:
+ *   node scripts/security-scan.js [options]
+ * 
+ * Options:
+ *   --verbose, -v    Show detailed output for each package
+ *   --json           Output results in JSON format
+ *   --strict         Fail on any risk level (not just critical/high)
+ *   --deep, -d       Deep scan: analyze lock files for transitive dependencies
+ *   --help, -h       Show help
+ * 
+ * Exit Codes:
+ *   0 - No issues found
+ *   1 - Critical/High severity issues found
+ *   2 - Configuration or runtime error
+ * 
+ * @version 2.0.0
  * @author Kris Araptus
+ * @contributor Jeremiah Coakley (FEDLIN) - Lock file scanning
  * @license MIT
  */
 
@@ -19,7 +35,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 // Package version
-const SCANNER_VERSION = '1.2.0';
+const SCANNER_VERSION = '2.0.0';
 
 // ANSI color codes for terminal output
 const colors = {
@@ -38,6 +54,7 @@ const colors = {
   bgRed: '\x1b[41m',
   bgGreen: '\x1b[42m',
   bgYellow: '\x1b[43m',
+  bgBlue: '\x1b[44m',
 };
 
 // Check if colors should be disabled
@@ -68,6 +85,7 @@ const options = {
   verbose: args.includes('--verbose') || args.includes('-v'),
   json: args.includes('--json'),
   strict: args.includes('--strict'),
+  deep: args.includes('--deep') || args.includes('-d'),
   help: args.includes('--help') || args.includes('-h'),
   version: args.includes('--version') || args.includes('-V'),
   silent: args.includes('--silent') || args.includes('-s'),
@@ -122,12 +140,12 @@ ${colors.bold}Usage:${colors.reset}
 ${colors.bold}Options:${colors.reset}
   ${colors.cyan}Scanning:${colors.reset}
   --verbose, -v          Show detailed output for each package
-  --deep                 Scan transitive dependencies (node_modules)
+  --deep, -d             Deep scan: analyze lock files for transitive dependencies
   --analyze-scripts      Check postinstall scripts for suspicious patterns
   --strict               Fail on any risk level, not just critical/high
 
   ${colors.cyan}Output:${colors.reset}
-  --json                 Output results in JSON format
+  --json                 Output results in JSON format (for CI/CD)
   --silent, -s           Suppress all output except errors
   --report               Generate HTML report
   --report-path <path>   Path for HTML report (default: security-report.html)
@@ -147,11 +165,17 @@ ${colors.bold}Options:${colors.reset}
   --help, -h             Show this help message
 
 ${colors.bold}Examples:${colors.reset}
-  ${colors.cyan}pnpm run security:scan${colors.reset}                    Quick scan
-  ${colors.cyan}pnpm run security:scan -- --deep${colors.reset}          Scan all dependencies
+  ${colors.cyan}pnpm run security:scan${colors.reset}                    Quick scan (direct deps only)
+  ${colors.cyan}pnpm run security:scan -- --deep${colors.reset}          Deep scan (all transitive deps)
   ${colors.cyan}pnpm run security:scan -- --fix${colors.reset}           Remove bad packages
   ${colors.cyan}pnpm run security:scan -- --ignore pkg1,pkg2${colors.reset}
   ${colors.cyan}pnpm run security:scan -- --report${colors.reset}        Generate HTML report
+
+${colors.bold}Lock File Support:${colors.reset}
+  ${colors.dim}With --deep, scans transitive dependencies from:${colors.reset}
+  • pnpm-lock.yaml  (pnpm)
+  • package-lock.json (npm)
+  • yarn.lock (yarn)
 
 ${colors.bold}Exit Codes:${colors.reset}
   ${colors.green}0${colors.reset} - All clear, no issues found
@@ -165,6 +189,10 @@ ${colors.bold}Config File (.securityscanrc.json):${colors.reset}
     "scanDeep": false,
     "analyzeScripts": false
   }
+
+${colors.bold}Documentation:${colors.reset}
+  ${colors.dim}docs/SECURITY-SCANNER.md${colors.reset}       Complete guide
+  ${colors.dim}security/README.md${colors.reset}             Quick start
 `);
   process.exit(0);
 }
@@ -318,120 +346,392 @@ function loadPackageJson() {
   }
 }
 
+// ============================================
+// LOCK FILE PARSING (Deep Scan Support)
+// ============================================
+
 /**
- * Parse pnpm-lock.yaml to get exact versions
+ * Detect which lock file exists in the project
+ * @returns {Object|null} Lock file info { type, path } or null
  */
-function parsePnpmLock(lockPath) {
-  const versions = {};
+function detectLockFile() {
+  const projectRoot = findProjectRoot();
   
-  try {
-    const content = fs.readFileSync(lockPath, 'utf8');
-    const lines = content.split('\n');
+  const lockFiles = [
+    { type: 'pnpm', filename: 'pnpm-lock.yaml' },
+    { type: 'npm', filename: 'package-lock.json' },
+    { type: 'yarn', filename: 'yarn.lock' },
+  ];
+  
+  for (const lock of lockFiles) {
+    const lockPath = path.join(projectRoot, lock.filename);
+    if (fs.existsSync(lockPath)) {
+      return { type: lock.type, path: lockPath, filename: lock.filename };
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Parse pnpm-lock.yaml without external YAML library
+ * Extracts package names and versions from the lockfile
+ * @param {string} content - Raw YAML content
+ * @returns {Map<string, Object>} Map of package name to { version, dependencyChain }
+ */
+function parsePnpmLock(content) {
+  const packages = new Map();
+  const lines = content.split('\n');
+  
+  let inPackages = false;
+  let currentPackage = null;
+  let currentVersion = null;
+  let indent = 0;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
     
-    // Simple YAML parsing for pnpm-lock.yaml
-    let currentPackage = null;
+    // Skip empty lines and comments
+    if (!trimmed || trimmed.startsWith('#')) continue;
     
-    for (const line of lines) {
-      // Match package entries like "  lodash@4.17.21:"
-      const pkgMatch = line.match(/^\s{2}'?([^:@]+)@([^:]+)'?:/);
-      if (pkgMatch) {
-        const [, name, version] = pkgMatch;
-        versions[name] = version.replace(/'/g, '');
+    // Detect packages section (pnpm v6+ format)
+    if (trimmed === 'packages:') {
+      inPackages = true;
+      continue;
+    }
+    
+    // Exit packages section
+    if (inPackages && !line.startsWith(' ') && !line.startsWith('\t') && trimmed !== '') {
+      if (!trimmed.startsWith('/') && !trimmed.startsWith("'")) {
+        inPackages = false;
+        continue;
+      }
+    }
+    
+    if (inPackages) {
+      // Match package entries like: /@scope/package@version: or /package@version:
+      // pnpm v9+ format: '@scope/package@version':
+      const packageMatch = trimmed.match(/^['"]?\/?((?:@[^@/]+\/)?[^@:]+)@([^:']+)['"]?:?\s*$/);
+      
+      if (packageMatch) {
+        const [, name, version] = packageMatch;
+        currentPackage = name;
+        currentVersion = version.replace(/['"]/g, '');
+        
+        if (!packages.has(currentPackage)) {
+          packages.set(currentPackage, {
+            version: currentVersion,
+            isTransitive: true,
+            dependencyChain: [],
+          });
+        }
       }
       
-      // Match packages section entries
-      const packagesMatch = line.match(/^\s{4}'?\/([^@]+)@([^(']+)/);
-      if (packagesMatch) {
-        const [, name, version] = packagesMatch;
-        versions[name] = version.replace(/'/g, '').replace(/:$/, '');
+      // Also handle the snapshots section format
+      const snapshotMatch = trimmed.match(/^['"]?((?:@[^@/]+\/)?[^@(]+)@([^:'(]+)/);
+      if (snapshotMatch && !packageMatch) {
+        const [, name, version] = snapshotMatch;
+        if (name && version && !packages.has(name)) {
+          packages.set(name, {
+            version: version.replace(/['"]/g, ''),
+            isTransitive: true,
+            dependencyChain: [],
+          });
+        }
       }
-    }
-  } catch (error) {
-    if (options.verbose) {
-      log(`${colors.dim}Could not parse pnpm-lock.yaml: ${error.message}${colors.reset}`);
     }
   }
   
-  return versions;
+  return packages;
 }
 
 /**
- * Parse package-lock.json to get exact versions
+ * Parse package-lock.json (npm)
+ * @param {string} content - Raw JSON content
+ * @returns {Map<string, Object>} Map of package name to { version, dependencyChain }
  */
-function parseNpmLock(lockPath) {
-  const versions = {};
+function parseNpmLock(content) {
+  const packages = new Map();
   
   try {
-    const content = fs.readFileSync(lockPath, 'utf8');
-    const lock = JSON.parse(content);
+    const lockfile = JSON.parse(content);
     
-    // npm lockfile v2/v3
-    if (lock.packages) {
-      for (const [pkgPath, pkg] of Object.entries(lock.packages)) {
-        if (pkgPath === '') continue; // Skip root
-        const name = pkgPath.replace('node_modules/', '').replace(/^.*node_modules\//, '');
-        if (pkg.version) {
-          versions[name] = pkg.version;
+    // Handle npm v7+ format (lockfileVersion 2 or 3)
+    if (lockfile.packages) {
+      for (const [pkgPath, pkgInfo] of Object.entries(lockfile.packages)) {
+        // Skip root package
+        if (pkgPath === '') continue;
+        
+        // Extract package name from path (e.g., "node_modules/@scope/pkg" -> "@scope/pkg")
+        const match = pkgPath.match(/node_modules\/((?:@[^/]+\/)?[^/]+)$/);
+        if (match) {
+          const name = match[1];
+          packages.set(name, {
+            version: pkgInfo.version || 'unknown',
+            isTransitive: !pkgInfo.dev && !pkgInfo.peer,
+            dependencyChain: extractDependencyChain(pkgPath),
+          });
         }
       }
     }
     
-    // npm lockfile v1
-    if (lock.dependencies) {
-      function extractDeps(deps, prefix = '') {
-        for (const [name, dep] of Object.entries(deps)) {
-          if (dep.version) {
-            versions[name] = dep.version;
-          }
-          if (dep.dependencies) {
-            extractDeps(dep.dependencies);
-          }
-        }
-      }
-      extractDeps(lock.dependencies);
+    // Handle npm v6 format (lockfileVersion 1)
+    if (lockfile.dependencies) {
+      parseNpmDependencies(lockfile.dependencies, packages, []);
     }
+    
   } catch (error) {
-    if (options.verbose) {
-      log(`${colors.dim}Could not parse package-lock.json: ${error.message}${colors.reset}`);
+    if (!options.json) {
+      console.error(`${colors.yellow}⚠ Warning: Could not parse package-lock.json: ${error.message}${colors.reset}`);
     }
   }
   
-  return versions;
+  return packages;
 }
 
 /**
- * Get exact versions from lock files
+ * Recursively parse npm v6 dependencies format
+ * @param {Object} deps - Dependencies object
+ * @param {Map} packages - Map to populate
+ * @param {Array} chain - Current dependency chain
+ */
+function parseNpmDependencies(deps, packages, chain) {
+  for (const [name, info] of Object.entries(deps)) {
+    packages.set(name, {
+      version: info.version || 'unknown',
+      isTransitive: chain.length > 0,
+      dependencyChain: [...chain],
+    });
+    
+    // Recurse into nested dependencies
+    if (info.dependencies) {
+      parseNpmDependencies(info.dependencies, packages, [...chain, name]);
+    }
+  }
+}
+
+/**
+ * Extract dependency chain from npm package path
+ * @param {string} pkgPath - Path like "node_modules/a/node_modules/b"
+ * @returns {Array<string>} Dependency chain
+ */
+function extractDependencyChain(pkgPath) {
+  const parts = pkgPath.split('/node_modules/').filter(p => p && p !== 'node_modules');
+  return parts.slice(0, -1); // All except the last one (the package itself)
+}
+
+/**
+ * Parse yarn.lock
+ * @param {string} content - Raw yarn.lock content
+ * @returns {Map<string, Object>} Map of package name to { version, dependencyChain }
+ */
+function parseYarnLock(content) {
+  const packages = new Map();
+  const lines = content.split('\n');
+  
+  let currentPackages = [];
+  let currentVersion = null;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    
+    // Skip empty lines and comments
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    
+    // Package declaration line (can have multiple packages on one line)
+    // Format: "package@version", package@version: or "@scope/package@version":
+    if (!line.startsWith(' ') && !line.startsWith('\t')) {
+      // Parse package names from the line
+      const pkgMatches = trimmed.matchAll(/["']?((?:@[^@,\s]+\/)?[^@,\s"']+)@[^,:\s"']+["']?/g);
+      currentPackages = [];
+      
+      for (const match of pkgMatches) {
+        if (match[1]) {
+          currentPackages.push(match[1]);
+        }
+      }
+      currentVersion = null;
+    }
+    
+    // Version line
+    if (line.startsWith('  version') && currentPackages.length > 0) {
+      const versionMatch = trimmed.match(/version\s+["']?([^"'\s]+)["']?/);
+      if (versionMatch) {
+        currentVersion = versionMatch[1];
+        
+        for (const pkgName of currentPackages) {
+          if (!packages.has(pkgName)) {
+            packages.set(pkgName, {
+              version: currentVersion,
+              isTransitive: true,
+              dependencyChain: [],
+            });
+          }
+        }
+      }
+    }
+  }
+  
+  return packages;
+}
+
+/**
+ * Load and parse the project's lock file
+ * @returns {Object|null} { type, packages: Map, filename } or null
+ */
+function loadLockFile() {
+  const lockInfo = detectLockFile();
+  
+  if (!lockInfo) {
+    return null;
+  }
+  
+  try {
+    const content = fs.readFileSync(lockInfo.path, 'utf8');
+    let packages;
+    
+    switch (lockInfo.type) {
+      case 'pnpm':
+        packages = parsePnpmLock(content);
+        break;
+      case 'npm':
+        packages = parseNpmLock(content);
+        break;
+      case 'yarn':
+        packages = parseYarnLock(content);
+        break;
+      default:
+        return null;
+    }
+    
+    if (options.verbose && !options.json) {
+      console.log(`${colors.dim}Lock file loaded: ${lockInfo.filename} (${packages.size} packages)${colors.reset}`);
+    }
+    
+    return {
+      type: lockInfo.type,
+      packages,
+      filename: lockInfo.filename,
+    };
+    
+  } catch (error) {
+    if (!options.json) {
+      console.error(`${colors.yellow}⚠ Warning: Could not read ${lockInfo.filename}: ${error.message}${colors.reset}`);
+    }
+    return null;
+  }
+}
+
+/**
+ * Merge direct dependencies with transitive dependencies from lock file
+ * @param {Object} directDeps - Direct dependencies from package.json
+ * @param {Map} lockPackages - Packages from lock file
+ * @returns {Object} Merged dependency info with chain tracking
+ */
+function mergeDependencies(directDeps, lockPackages) {
+  const merged = new Map();
+  const directNames = new Set(Object.keys(directDeps));
+  
+  // Add direct dependencies first
+  for (const [name, version] of Object.entries(directDeps)) {
+    merged.set(name, {
+      version,
+      isDirect: true,
+      isTransitive: false,
+      dependencyChain: [],
+    });
+  }
+  
+  // Add transitive dependencies from lock file
+  for (const [name, info] of lockPackages) {
+    if (!merged.has(name)) {
+      merged.set(name, {
+        version: info.version,
+        isDirect: false,
+        isTransitive: true,
+        dependencyChain: info.dependencyChain || [],
+      });
+    } else {
+      // Update version from lock file (more accurate)
+      const existing = merged.get(name);
+      existing.version = info.version;
+    }
+  }
+  
+  return merged;
+}
+
+/**
+ * Get exact versions from lock files (for version matching in direct deps)
+ * This is separate from loadLockFile() which does full deep scanning
  */
 function getLockedVersions() {
   const projectRoot = findProjectRoot();
+  const versions = {};
   
   // Try pnpm-lock.yaml first
-  const pnpmLock = path.join(projectRoot, 'pnpm-lock.yaml');
-  if (fs.existsSync(pnpmLock)) {
+  const pnpmLockPath = path.join(projectRoot, 'pnpm-lock.yaml');
+  if (fs.existsSync(pnpmLockPath)) {
     if (options.verbose) {
       log(`${colors.dim}Reading versions from pnpm-lock.yaml${colors.reset}`);
     }
-    return parsePnpmLock(pnpmLock);
+    try {
+      const content = fs.readFileSync(pnpmLockPath, 'utf8');
+      const packages = parsePnpmLock(content);
+      for (const [name, info] of packages) {
+        versions[name] = info.version;
+      }
+      return versions;
+    } catch (error) {
+      if (options.verbose) {
+        log(`${colors.dim}Could not parse pnpm-lock.yaml: ${error.message}${colors.reset}`);
+      }
+    }
   }
   
   // Try package-lock.json
-  const npmLock = path.join(projectRoot, 'package-lock.json');
-  if (fs.existsSync(npmLock)) {
+  const npmLockPath = path.join(projectRoot, 'package-lock.json');
+  if (fs.existsSync(npmLockPath)) {
     if (options.verbose) {
       log(`${colors.dim}Reading versions from package-lock.json${colors.reset}`);
     }
-    return parseNpmLock(npmLock);
-  }
-  
-  // Try yarn.lock (basic support)
-  const yarnLock = path.join(projectRoot, 'yarn.lock');
-  if (fs.existsSync(yarnLock)) {
-    if (options.verbose) {
-      log(`${colors.dim}yarn.lock found but not fully supported, using package.json versions${colors.reset}`);
+    try {
+      const content = fs.readFileSync(npmLockPath, 'utf8');
+      const packages = parseNpmLock(content);
+      for (const [name, info] of packages) {
+        versions[name] = info.version;
+      }
+      return versions;
+    } catch (error) {
+      if (options.verbose) {
+        log(`${colors.dim}Could not parse package-lock.json: ${error.message}${colors.reset}`);
+      }
     }
   }
   
-  return {};
+  // Try yarn.lock (basic support)
+  const yarnLockPath = path.join(projectRoot, 'yarn.lock');
+  if (fs.existsSync(yarnLockPath)) {
+    if (options.verbose) {
+      log(`${colors.dim}Reading versions from yarn.lock${colors.reset}`);
+    }
+    try {
+      const content = fs.readFileSync(yarnLockPath, 'utf8');
+      const packages = parseYarnLock(content);
+      for (const [name, info] of packages) {
+        versions[name] = info.version;
+      }
+      return versions;
+    } catch (error) {
+      if (options.verbose) {
+        log(`${colors.dim}Could not parse yarn.lock: ${error.message}${colors.reset}`);
+      }
+    }
+  }
+  
+  return versions;
 }
 
 /**
@@ -554,8 +854,14 @@ function isVersionAffected(version, affectedVersions) {
 
 /**
  * Check a package against the threat database
+ * @param {string} packageName - Package name
+ * @param {string} version - Package version
+ * @param {Object} db - Threat database
+ * @param {Object} depInfo - Optional dependency info { isDirect, isTransitive, dependencyChain }
+ * @param {Object} config - Configuration options
+ * @returns {Object|null} Issue object or null if clean
  */
-function checkPackage(packageName, version, db, config) {
+function checkPackage(packageName, version, db, depInfo = null, config = {}) {
   // Skip ignored packages
   if (isIgnored(packageName, config)) {
     return { ignored: true };
@@ -568,11 +874,19 @@ function checkPackage(packageName, version, db, config) {
   
   const malicious = db.knownMalicious || {};
   
+  // Base issue properties (will be extended with specific type info)
+  const baseIssue = {
+    package: packageName,
+    version,
+    isDirect: depInfo?.isDirect ?? true,
+    isTransitive: depInfo?.isTransitive ?? false,
+    dependencyChain: depInfo?.dependencyChain || [],
+  };
+  
   // Check confirmed malicious
   if (malicious.confirmed?.includes(packageName)) {
     return {
-      package: packageName,
-      version,
+      ...baseIssue,
       severity: 'critical',
       type: 'Confirmed Malicious',
       reason: 'This package has been confirmed as malicious',
@@ -583,8 +897,7 @@ function checkPackage(packageName, version, db, config) {
   // Check typosquatting
   if (malicious.typosquatting?.includes(packageName)) {
     return {
-      package: packageName,
-      version,
+      ...baseIssue,
       severity: 'critical',
       type: 'Typosquatting',
       reason: 'This package name is a typosquatting variant of a popular package',
@@ -595,8 +908,7 @@ function checkPackage(packageName, version, db, config) {
   // Check credential theft
   if (malicious.credentialTheft?.includes(packageName)) {
     return {
-      package: packageName,
-      version,
+      ...baseIssue,
       severity: 'critical',
       type: 'Credential Theft',
       reason: 'This package has been found to steal credentials',
@@ -607,12 +919,50 @@ function checkPackage(packageName, version, db, config) {
   // Check crypto malware
   if (malicious.cryptoMalware?.includes(packageName)) {
     return {
-      package: packageName,
-      version,
+      ...baseIssue,
       severity: 'critical',
       type: 'Crypto Malware',
-      reason: 'This package contains cryptocurrency-related malware',
+      reason: 'This package contains cryptocurrency mining or wallet-stealing malware',
       action: 'REMOVE IMMEDIATELY - Check for unauthorized transactions',
+    };
+  }
+  
+  // Check protestware (with appropriate severity based on impact)
+  const protestware = malicious.protestware || {};
+  
+  // High severity protestware (destructive - deletes/corrupts files)
+  if (protestware.high?.packages?.includes(packageName)) {
+    const details = protestware.high.details?.[packageName] || 'Destructive protestware';
+    return {
+      ...baseIssue,
+      severity: 'high',
+      type: 'Protestware (Destructive)',
+      reason: details,
+      action: 'REMOVE - Can delete or corrupt files on affected systems',
+    };
+  }
+  
+  // Medium severity protestware (DoS - infinite loops, crashes)
+  if (protestware.medium?.packages?.includes(packageName)) {
+    const details = protestware.medium.details?.[packageName] || 'DoS protestware';
+    return {
+      ...baseIssue,
+      severity: 'medium',
+      type: 'Protestware (DoS)',
+      reason: details,
+      action: 'REMOVE - Causes application hang or crash. Use alternative package.',
+    };
+  }
+  
+  // Low severity protestware (messages only, no functional impact)
+  if (protestware.low?.packages?.includes(packageName)) {
+    const details = protestware.low.details?.[packageName] || 'Protestware with political message';
+    return {
+      ...baseIssue,
+      severity: 'low',
+      type: 'Protestware (Message)',
+      reason: details,
+      action: 'OPTIONAL - No malicious behavior, contains political message only',
     };
   }
   
@@ -625,8 +975,7 @@ function checkPackage(packageName, version, db, config) {
       
       if (affectedVersions && !isVersionAffected(version, affectedVersions)) {
         return {
-          package: packageName,
-          version,
+          ...baseIssue,
           severity: 'low',
           type: campaign.name || campaignId,
           campaign: campaignId,
@@ -638,8 +987,7 @@ function checkPackage(packageName, version, db, config) {
       }
       
       return {
-        package: packageName,
-        version,
+        ...baseIssue,
         severity: campaign.severity || 'high',
         type: campaign.name || campaignId,
         campaign: campaignId,
@@ -691,7 +1039,12 @@ function formatIssue(issue) {
   const color = severityColors[issue.severity] || colors.white;
   const icon = severityIcons[issue.severity] || '•';
   
-  let output = `  ${icon} ${color}${issue.package}@${issue.version}${colors.reset}\n`;
+  // Indicate if this is a transitive dependency
+  const depTypeLabel = issue.isTransitive 
+    ? `${colors.bgBlue}${colors.white} TRANSITIVE ${colors.reset} `
+    : '';
+  
+  let output = `  ${icon} ${depTypeLabel}${color}${issue.package}@${issue.version}${colors.reset}\n`;
   output += `     ${colors.dim}Type:${colors.reset} ${issue.type}\n`;
   output += `     ${colors.dim}Reason:${colors.reset} ${issue.reason}\n`;
   output += `     ${colors.dim}Action:${colors.reset} ${colors.bold}${issue.action}${colors.reset}`;
@@ -700,13 +1053,24 @@ function formatIssue(issue) {
     output += `\n     ${colors.dim}Affected versions:${colors.reset} ${issue.affectedVersions.join(', ')}`;
   }
   
+  // Show dependency chain for transitive dependencies
+  if (issue.isTransitive && issue.dependencyChain && issue.dependencyChain.length > 0) {
+    const chain = [...issue.dependencyChain, issue.package].join(' → ');
+    output += `\n     ${colors.dim}Dependency chain:${colors.reset} ${colors.cyan}${chain}${colors.reset}`;
+  } else if (issue.isTransitive) {
+    output += `\n     ${colors.dim}Introduced via:${colors.reset} ${colors.cyan}transitive dependency${colors.reset}`;
+  }
+  
   return output;
 }
 
 /**
  * Print results in human-readable format
+ * @param {Object} results - Scan results
+ * @param {Object} scanStats - Scan statistics { total, direct, transitive, lockFileType }
+ * @param {Object} db - Threat database
  */
-function printResults(results, stats, db) {
+function printResults(results, scanStats, db) {
   const separator = '━'.repeat(70);
   
   log(`\n${separator}`);
@@ -718,21 +1082,36 @@ function printResults(results, stats, db) {
     log(`\n${colors.dim}Database version: ${db.version || 'unknown'}${colors.reset}`);
     log(`${colors.dim}Last updated: ${db.lastUpdated || 'unknown'}${colors.reset}`);
     
-    const maliciousCount = Object.values(db.knownMalicious || {})
-      .reduce((sum, arr) => sum + (arr?.length || 0), 0);
-    log(`${colors.dim}Known malicious packages: ${maliciousCount}${colors.reset}`);
+    // Count unique malicious packages (some appear in multiple categories)
+    const allMalicious = new Set([
+      ...(db.knownMalicious?.confirmed || []),
+      ...(db.knownMalicious?.typosquatting || []),
+      ...(db.knownMalicious?.credentialTheft || []),
+      ...(db.knownMalicious?.cryptoMalware || []),
+    ]);
+    log(`${colors.dim}Known malicious packages: ${allMalicious.size}${colors.reset}`);
     log(`${colors.dim}Campaigns tracked: ${Object.keys(db.campaigns || {}).length}${colors.reset}\n`);
   }
   
   // Summary with colors
   const totalIssues = Object.values(results).reduce((sum, arr) => sum + arr.length, 0);
-  log(`\n${colors.bold}📦 Packages scanned:${colors.reset} ${stats.total}`);
   
-  if (stats.ignored > 0) {
-    log(`${colors.dim}📋 Packages ignored:${colors.reset} ${stats.ignored}`);
+  // Show scan mode and stats
+  if (scanStats.lockFileType) {
+    log(`\n${colors.bold}🔬 Scan mode:${colors.reset} ${colors.cyan}DEEP SCAN${colors.reset} (via ${scanStats.lockFileType})`);
+    log(`${colors.bold}📦 Packages scanned:${colors.reset} ${scanStats.total}`);
+    log(`   ${colors.dim}├─ Direct dependencies:${colors.reset} ${scanStats.direct}`);
+    log(`   ${colors.dim}└─ Transitive dependencies:${colors.reset} ${scanStats.transitive}`);
+  } else {
+    log(`\n${colors.bold}🔍 Scan mode:${colors.reset} ${colors.dim}DIRECT ONLY${colors.reset} (use --deep for transitive)`);
+    log(`${colors.bold}📦 Packages scanned:${colors.reset} ${scanStats.total}`);
   }
-  if (stats.trusted > 0) {
-    log(`${colors.dim}✓  Trusted packages:${colors.reset} ${stats.trusted}`);
+  
+  if (scanStats.ignored > 0) {
+    log(`${colors.dim}📋 Packages ignored:${colors.reset} ${scanStats.ignored}`);
+  }
+  if (scanStats.trusted > 0) {
+    log(`${colors.dim}✓  Trusted packages:${colors.reset} ${scanStats.trusted}`);
   }
   
   // Issue counts with colors
@@ -748,6 +1127,16 @@ function printResults(results, stats, db) {
   }
   if (results.low.length > 0) {
     log(`   ${colors.cyan}Low: ${results.low.length}${colors.reset}`);
+  }
+  
+  // Count transitive issues
+  if (scanStats.lockFileType && totalIssues > 0) {
+    const transitiveIssues = Object.values(results)
+      .flat()
+      .filter(i => i.isTransitive).length;
+    if (transitiveIssues > 0) {
+      console.log(`   ${colors.yellow}└─ In transitive dependencies: ${transitiveIssues}${colors.reset}`);
+    }
   }
   
   if (totalIssues === 0) {
@@ -818,24 +1207,34 @@ function printResults(results, stats, db) {
 
 /**
  * Print results in JSON format
+ * @param {Object} results - Scan results
+ * @param {Object} scanStats - Scan statistics
  */
-function printJsonResults(results, stats) {
+function printJsonResults(results, scanStats) {
   const totalIssues = Object.values(results).reduce((sum, arr) => sum + arr.length, 0);
+  const transitiveIssues = Object.values(results).flat().filter(i => i.isTransitive).length;
   
   const output = {
     version: SCANNER_VERSION,
     timestamp: new Date().toISOString(),
-    packagesScanned: stats.total,
-    packagesIgnored: stats.ignored,
-    packagesTrusted: stats.trusted,
+    scanMode: scanStats.lockFileType ? 'deep' : 'direct',
+    lockFile: scanStats.lockFileType || null,
+    packagesScanned: {
+      total: scanStats.total,
+      direct: scanStats.direct,
+      transitive: scanStats.transitive,
+    },
+    packagesIgnored: scanStats.ignored || 0,
+    packagesTrusted: scanStats.trusted || 0,
     totalIssues,
+    transitiveIssues,
     results: {
       critical: results.critical,
       high: results.high,
       medium: results.medium,
       low: results.low,
     },
-    suspiciousScripts: stats.suspiciousScripts || [],
+    suspiciousScripts: scanStats.suspiciousScripts || [],
   };
   
   console.log(JSON.stringify(output, null, 2));
@@ -1112,43 +1511,85 @@ async function scan() {
   // Get locked versions for accurate matching
   const lockedVersions = getLockedVersions();
   
-  // Combine all dependencies
-  let allDependencies = {
+  // Combine all direct dependencies
+  const directDependencies = {
     ...packageJson.dependencies,
     ...packageJson.devDependencies,
     ...packageJson.peerDependencies,
     ...packageJson.optionalDependencies,
   };
   
-  // Add transitive dependencies if --deep
-  if (mergedOptions.deep) {
-    log(`${colors.dim}Scanning transitive dependencies...${colors.reset}`);
-    const nodeModulesPackages = scanNodeModules();
-    for (const [name, pkg] of Object.entries(nodeModulesPackages)) {
-      if (!allDependencies[name]) {
-        allDependencies[name] = pkg.version;
-      }
+  const directCount = Object.keys(directDependencies).length;
+  
+  if (directCount === 0) {
+    if (!options.json) {
+      log(`${colors.yellow}⚠ No dependencies found in package.json${colors.reset}\n`);
     }
-  }
-  
-  const packageNames = Object.keys(allDependencies);
-  
-  if (packageNames.length === 0) {
-    log(`${colors.yellow}⚠ No dependencies found in package.json${colors.reset}\n`);
     process.exit(0);
   }
   
-  if (options.verbose) {
-    log(`${colors.dim}Scanning ${packageNames.length} dependencies...${colors.reset}\n`);
-  }
-  
-  // Stats
-  const stats = {
-    total: packageNames.length,
+  // Deep scan: load and parse lock file
+  let allDependencies;
+  let scanStats = {
+    total: directCount,
+    direct: directCount,
+    transitive: 0,
+    lockFileType: null,
     ignored: 0,
     trusted: 0,
     suspiciousScripts: [],
   };
+  
+  if (mergedOptions.deep) {
+    if (!options.json) {
+      log(`${colors.cyan}🔬 Deep scan enabled - analyzing lock file...${colors.reset}\n`);
+    }
+    
+    const lockFile = loadLockFile();
+    
+    if (lockFile && lockFile.packages.size > 0) {
+      allDependencies = mergeDependencies(directDependencies, lockFile.packages);
+      scanStats.total = allDependencies.size;
+      scanStats.transitive = allDependencies.size - directCount;
+      scanStats.lockFileType = lockFile.filename;
+      
+      if (!options.json) {
+        log(`${colors.green}✓ Found ${lockFile.packages.size} packages in ${lockFile.filename}${colors.reset}`);
+        log(`${colors.dim}  (${directCount} direct + ${scanStats.transitive} transitive)${colors.reset}\n`);
+      }
+    } else {
+      if (!options.json) {
+        log(`${colors.yellow}⚠ No lock file found, falling back to direct dependencies only${colors.reset}`);
+        log(`${colors.dim}  Run 'pnpm install' or 'npm install' to generate a lock file${colors.reset}\n`);
+      }
+      
+      // Convert to Map format for consistency
+      allDependencies = new Map();
+      for (const [name, version] of Object.entries(directDependencies)) {
+        allDependencies.set(name, {
+          version: lockedVersions[name] || version,
+          isDirect: true,
+          isTransitive: false,
+          dependencyChain: [],
+        });
+      }
+    }
+  } else {
+    // Standard scan: direct dependencies only
+    allDependencies = new Map();
+    for (const [name, version] of Object.entries(directDependencies)) {
+      allDependencies.set(name, {
+        version: lockedVersions[name] || version,
+        isDirect: true,
+        isTransitive: false,
+        dependencyChain: [],
+      });
+    }
+  }
+  
+  if (options.verbose && !options.json) {
+    log(`${colors.dim}Scanning ${allDependencies.size} packages...${colors.reset}\n`);
+  }
   
   // Scan each package
   const results = {
@@ -1158,36 +1599,43 @@ async function scan() {
     low: [],
   };
   
-  for (const [packageName, declaredVersion] of Object.entries(allDependencies)) {
-    // Use locked version if available
-    const version = lockedVersions[packageName] || declaredVersion;
-    
-    const result = checkPackage(packageName, version, db, config);
+  for (const [packageName, depInfo] of allDependencies) {
+    const version = depInfo.version;
+    const result = checkPackage(packageName, version, db, depInfo, config);
     
     if (result?.ignored) {
-      stats.ignored++;
-      if (options.verbose) {
+      scanStats.ignored++;
+      if (options.verbose && !options.json) {
         log(`  ${colors.dim}⊘ ${packageName} - Ignored${colors.reset}`);
       }
       continue;
     }
     
     if (result?.trusted) {
-      stats.trusted++;
-      if (options.verbose) {
-        log(`  ${colors.green}✓${colors.reset} ${colors.dim}${packageName} - Trusted${colors.reset}`);
+      scanStats.trusted++;
+      if (options.verbose && !options.json) {
+        const transitiveLabel = depInfo.isTransitive 
+          ? `${colors.dim}[transitive]${colors.reset} ` 
+          : '';
+        log(`  ${colors.green}✓${colors.reset} ${transitiveLabel}${colors.dim}${packageName} - Trusted${colors.reset}`);
       }
       continue;
     }
     
     if (result) {
       const color = result.severity === 'critical' ? colors.red : colors.yellow;
-      if (options.verbose) {
-        log(`  ${color}✗ ${packageName}@${version}${colors.reset} - ${result.type}`);
+      if (options.verbose && !options.json) {
+        const transitiveLabel = depInfo.isTransitive 
+          ? `${colors.dim}[transitive]${colors.reset} ` 
+          : '';
+        log(`  ${color}✗${colors.reset} ${transitiveLabel}${color}${packageName}@${version}${colors.reset} - ${result.type}`);
       }
       results[result.severity].push(result);
-    } else if (options.verbose) {
-      log(`  ${colors.green}✓${colors.reset} ${packageName}`);
+    } else if (options.verbose && !options.json) {
+      const transitiveLabel = depInfo.isTransitive 
+        ? `${colors.dim}[transitive]${colors.reset} ` 
+        : '';
+      log(`  ${colors.green}✓${colors.reset} ${transitiveLabel}${packageName}`);
     }
   }
   
@@ -1203,7 +1651,7 @@ async function scan() {
         if (script) {
           const matches = analyzeScript(script, patterns);
           if (matches.length > 0) {
-            stats.suspiciousScripts.push({
+            scanStats.suspiciousScripts.push({
               package: name,
               scriptType,
               patterns: matches,
@@ -1216,14 +1664,14 @@ async function scan() {
   
   // Output results
   if (options.json) {
-    printJsonResults(results, stats);
+    printJsonResults(results, scanStats);
   } else {
-    printResults(results, stats, db);
+    printResults(results, scanStats, db);
   }
   
   // Generate HTML report if requested
   if (options.report) {
-    generateHtmlReport(results, stats, db);
+    generateHtmlReport(results, scanStats, db);
   }
   
   // Fix packages if requested
