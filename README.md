@@ -235,7 +235,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npx @kris-araptus/npm-security-scanner --deep --strict
+      - run: npx @araptus/npm-security-scanner --deep --strict
 ```
 
 ### Exit Codes
@@ -282,35 +282,21 @@ The threat database is at `security/compromised-packages.json`. It includes:
 
 ```
 ├── scripts/
-│   ├── security-scan.js    # Main scanner CLI
-│   └── scan-all.js         # Multi-project scanner
+│   ├── security-scan.js         # Main scanner CLI (zero dependencies)
+│   └── scan-all.js              # Multi-project batch scanner
 ├── security/
-│   └── compromised-packages.json  # Threat database
+│   ├── compromised-packages.json  # Threat database (137+ packages)
+│   └── README.md                # Quick start guide
 ├── tests/
-│   └── security-scan.test.js      # Unit tests
-├── .securityscanrc.json    # Your config (create from example)
-├── projects.json           # Your projects list (create from example)
-└── README.md
-```
-
----
-
-## Project Structure
-
-```
-├── scripts/
-│   └── security-scan.js      # CLI scanner (zero dependencies)
-├── security/
-│   ├── compromised-packages.json  # Threat database
-│   └── README.md             # Quick start guide
-├── tests/
-│   └── security-scan.test.js # Test suite
-├── web/                      # Web UI (Astro + React + Tailwind)
+│   └── security-scan.test.js    # Unit tests
+├── web/                         # Web UI (Astro + React + Tailwind)
 │   ├── src/
-│   │   ├── components/       # React components
-│   │   ├── lib/              # Scanner logic + threat DB
-│   │   └── pages/            # Astro pages + API
+│   │   ├── components/          # React components (Scanner.tsx)
+│   │   ├── lib/                 # Scanner logic + threat DB
+│   │   └── pages/               # Astro pages + API endpoints
 │   └── package.json
+├── .securityscanrc.json         # Your config (create from example)
+├── projects.json                # Your projects list (for scan-all.js)
 └── package.json
 ```
 
