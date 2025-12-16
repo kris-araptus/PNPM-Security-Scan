@@ -348,7 +348,9 @@ function scanProject(projectPath) {
       
       try {
         const parsed = JSON.parse(stdout);
-        result.packagesScanned = parsed.packagesScanned || 0;
+        // packagesScanned may be a number (old format) or object with .total (new format)
+        const pkgScanned = parsed.packagesScanned;
+        result.packagesScanned = typeof pkgScanned === 'number' ? pkgScanned : (pkgScanned?.total || 0);
         result.totalIssues = parsed.totalIssues || 0;
         result.critical = parsed.results?.critical?.length || 0;
         result.high = parsed.results?.high?.length || 0;
