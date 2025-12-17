@@ -6,15 +6,6 @@ A fast, zero-dependency CLI tool that scans your dependencies against a database
 
 > **Inspired by the [Shai-Hulud npm worm](https://socket.dev/blog/shai-hulud-npm-worm)** — a self-replicating malware that infected 187+ packages with 2M+ weekly downloads in September 2025.
 
----
-
-## 🌐 Web UI
-
-Try the scanner without installing anything: **[security-scanner.araptus.com](https://security-scanner.araptus.com)**
-
-Just drag & drop your `package.json` or lock file and get instant results.
-
----
 
 ## Quick Start
 
