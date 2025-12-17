@@ -219,7 +219,6 @@ web/src/
 
 3. **Review transitive dependencies** — Run `--deep --verbose` to see the full dependency tree analysis.
 
-4. **Try the Web UI** — Visit [security-scanner.araptus.com](https://security-scanner.araptus.com) for visual scanning.
 
 ---
 
