@@ -1,6 +1,6 @@
 {
   "name": "@araptus/npm-security-scanner",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A fast, configurable CLI tool that scans your dependencies against a continuously-updated database of known compromised npm packages. Supports deep scanning of transitive dependencies via lock files.",
   "main": "scripts/security-scan.js",
   "bin": {
