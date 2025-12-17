@@ -246,6 +246,41 @@ Use in CI/CD:
 
 ---
 
+## Web UI (Stakeholder Reports)
+
+A browser-based interface for scanning dependencies — perfect for demos, stakeholder presentations, or non-technical team members.
+
+### Quick Start
+
+```bash
+cd web
+pnpm install
+pnpm dev
+```
+
+Open [http://localhost:4321](http://localhost:4321) in your browser.
+
+### Features
+
+- **Drag & drop** — Upload `package.json` or lock files directly
+- **Paste support** — Copy/paste file contents for quick scans
+- **Deep scanning** — Automatically detects and parses lock files
+- **Visual reports** — Color-coded severity levels, dependency chains
+- **One-click remediation** — Copy removal commands for npm/pnpm/yarn
+- **Campaign tracking** — See which attack campaigns affect your deps
+
+### Build for Production
+
+```bash
+cd web
+pnpm build
+pnpm preview
+```
+
+The web UI is built with **Astro**, **React**, and **Tailwind CSS**. Deploys to Vercel out of the box.
+
+---
+
 ## Threat Database
 
 The threat database is at `security/compromised-packages.json`. It includes:
