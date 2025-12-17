@@ -1,4 +1,9 @@
 @import "tailwindcss";
+@plugin "daisyui";
+
+@source "../**/*.astro";
+@source "../**/*.tsx";
+@source "../**/*.ts";
 
 /* Araptus Brand Theme - Official Purple #570df8 */
 @theme {

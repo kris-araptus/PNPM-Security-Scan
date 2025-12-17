@@ -296,7 +296,7 @@ The threat database is at `security/compromised-packages.json`. It includes:
 ## Credits
 
 - **Kris Araptus** — Original scanner and threat database
-- **Jeremiah Coakley / FEDLIN** — Deep scanning and web UI
+- **Jeremiah Coakley / FEDLIN** — Deep scanning
 
 ---
 
