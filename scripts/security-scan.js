@@ -1175,10 +1175,10 @@ function printResults(results, scanStats, db) {
   }
   
   // Script analysis results
-  if (stats.suspiciousScripts && stats.suspiciousScripts.length > 0) {
-    log(`\n${colors.yellow}⚠️  SUSPICIOUS SCRIPTS (${stats.suspiciousScripts.length})${colors.reset}`);
+  if (scanStats.suspiciousScripts && scanStats.suspiciousScripts.length > 0) {
+    log(`\n${colors.yellow}⚠️  SUSPICIOUS SCRIPTS (${scanStats.suspiciousScripts.length})${colors.reset}`);
     log(separator);
-    for (const item of stats.suspiciousScripts) {
+    for (const item of scanStats.suspiciousScripts) {
       log(`  ⚠️  ${colors.yellow}${item.package}${colors.reset}`);
       log(`     ${colors.dim}Script:${colors.reset} ${item.scriptType}`);
       log(`     ${colors.dim}Patterns found:${colors.reset} ${item.patterns.join(', ')}`);

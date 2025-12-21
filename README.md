@@ -4,15 +4,15 @@ Detect compromised npm packages in your Node.js projects.
 
 A fast, zero-dependency CLI tool that scans your dependencies against a database of known malicious packages. Works with **npm**, **pnpm**, and **yarn** — any project with a `package.json`.
 
-> **Inspired by the [Shai-Hulud npm worm](https://socket.dev/blog/shai-hulud-npm-worm)** — a self-replicating malware that infected 187+ packages with 2M+ weekly downloads in September 2025.
+> **Inspired by the [Shai-Hulud npm worm](https://socket.dev/blog/shai-hulud-npm-worm)** — a self-replicating malware that infected 700+ packages with 2M+ weekly downloads. Resurged in November 2025 affecting 19,000+ GitHub repos.
 
 
 ## Quick Start
 
 ```bash
 # Clone or copy to your project
-git clone https://github.com/your-repo/pnpm-security-scan.git
-cd pnpm-security-scan
+git clone https://github.com/araptus/npm-security-scanner.git
+cd npm-security-scanner
 
 # Install (optional - zero dependencies for core scanner)
 pnpm install
@@ -188,10 +188,10 @@ Create a `.securityscanrc.json` file in your project root for persistent setting
 
 ## What It Detects
 
-- **137+ known malicious packages** — confirmed threats from npm advisories
-- **5 major 2025 attack campaigns** — Shai-Hulud, PhantomRaven, Gluestack RAT, and more
+- **159+ known malicious packages** — confirmed threats from npm advisories
+- **7 major 2025 attack campaigns** — Shai-Hulud, Chalk Phishing, PhantomRaven, Gluestack RAT, and more
 - **Version-specific compromises** — only flags affected versions, not entire packages
-- **Typosquatting variants** (66 packages) — common misspellings of popular packages
+- **Typosquatting variants** (75 packages) — common misspellings of popular packages
 - **Credential theft packages** (25 packages) — packages designed to steal tokens and keys
 - **Crypto mining malware** (13 packages) — hidden miners in dependencies
 - **Suspicious postinstall scripts** — detects eval, network calls, obfuscation
@@ -286,10 +286,11 @@ The web UI is built with **Astro**, **React**, and **Tailwind CSS**. Deploys to 
 The threat database is at `security/compromised-packages.json`. It includes:
 
 - `knownMalicious.confirmed` — packages confirmed as malicious
+- `knownMalicious.versionSpecific` — legitimate packages with compromised versions (e.g., chalk 5.6.1)
 - `knownMalicious.typosquatting` — typosquatting variants
 - `knownMalicious.credentialTheft` — token/credential stealers
 - `knownMalicious.cryptoMalware` — crypto mining packages
-- `campaigns` — coordinated attack campaigns with affected versions
+- `campaigns` — 7 coordinated attack campaigns with affected versions
 - `trustedPackages` — allowlist of known-safe packages
 
 ### Update the Database
@@ -311,7 +312,7 @@ The threat database is at `security/compromised-packages.json`. It includes:
 │   ├── security-scan.js         # Main scanner CLI (zero dependencies)
 │   └── scan-all.js              # Multi-project batch scanner
 ├── security/
-│   ├── compromised-packages.json  # Threat database (137+ packages)
+│   ├── compromised-packages.json  # Threat database (159+ packages, 7 campaigns)
 │   └── README.md                # Quick start guide
 ├── tests/
 │   └── security-scan.test.js    # Unit tests

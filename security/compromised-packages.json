@@ -1,6 +1,6 @@
 {
-  "version": "2.0.0",
-  "lastUpdated": "2025-12-13",
+  "version": "2.1.0",
+  "lastUpdated": "2025-12-16",
   "sources": [
     "https://github.com/advisories?query=ecosystem%3Anpm",
     "https://socket.dev/blog",
@@ -143,6 +143,69 @@
       "references": [
         "https://www.techradar.com/pro/security/amazon-researchers-uncover-major-token-farming-malware-scam-over-150-000-malicious-packages-found"
       ]
+    },
+    
+    "chalk-phishing-2025-09": {
+      "name": "Chalk Maintainer Phishing Attack",
+      "date": "2025-09-08",
+      "severity": "critical",
+      "description": "Attackers phished a maintainer of the chalk package. Within 16 minutes of gaining access, they injected crypto-stealing malware into 18 trusted packages with 2.6 billion+ weekly downloads. The malware intercepts wallet transactions and manipulates application behavior.",
+      "packagesAffected": 18,
+      "weeklyDownloads": 2600000000,
+      "packages": [],
+      "affectedVersions": {
+        "chalk": ["5.6.1"],
+        "debug": ["4.4.2"],
+        "ansi-styles": ["6.2.2"],
+        "strip-ansi": ["7.1.1"],
+        "supports-color": ["10.2.1"],
+        "wrap-ansi": ["9.0.1"],
+        "ansi-regex": ["6.2.1"],
+        "has-ansi": ["6.0.1"],
+        "color-convert": ["3.1.1"],
+        "color-name": ["2.0.1"],
+        "color-string": ["2.1.1"],
+        "is-arrayish": ["0.3.3"],
+        "simple-swizzle": ["0.2.3"],
+        "error-ex": ["1.3.3"],
+        "slice-ansi": ["7.1.1"],
+        "supports-hyperlinks": ["4.1.1"],
+        "chalk-template": ["1.1.1"],
+        "backslash": ["0.2.1"]
+      },
+      "indicators": [
+        "Crypto wallet transaction interception",
+        "Browser-based crypto stealer",
+        "Obfuscated payloads",
+        "Wallet address replacement"
+      ],
+      "references": [
+        "https://www.sisainfosec.com/blogs/browser-based-crypto-stealer-in-npm-supply-chain-attack-report-by-sisa-sappers/",
+        "https://www.sygnia.co/threat-reports-and-advisories/npm-supply-chain-attack-september-2025/"
+      ]
+    },
+    
+    "flashbots-theft-2025-11": {
+      "name": "Flashbots Credential Theft",
+      "date": "2025-11",
+      "severity": "critical",
+      "description": "Four malicious npm packages impersonating Flashbots and cryptographic utilities to harvest Web3 wallet credentials, private keys, and mnemonic seeds.",
+      "packagesAffected": 4,
+      "packages": [
+        "flashbotts",
+        "flashbots-mev",
+        "flashbots-bundle",
+        "mev-flashbots"
+      ],
+      "indicators": [
+        "Web3 wallet credential harvesting",
+        "Private key exfiltration",
+        "Mnemonic seed theft",
+        "Trojanized cryptographic components"
+      ],
+      "references": [
+        "https://www.criticalstart.com/sites/default/files/2025-11/IntelHub%20Daily%20Highlight%2011122025%20PDF.pdf"
+      ]
     }
   },
   
@@ -183,6 +246,102 @@
       "crypto-wallet-finder",
       "wallet-tools-eth"
     ],
+    
+    "versionSpecific": {
+      "description": "Packages that are legitimate but have specific compromised versions. Scanner should only flag the affected versions, not the entire package.",
+      "packages": {
+        "chalk": {
+          "maliciousVersions": ["5.6.1"],
+          "safeVersions": ["5.3.0", "5.4.0", "5.4.1", "5.5.0", "5.5.1"],
+          "campaign": "chalk-phishing-2025-09"
+        },
+        "debug": {
+          "maliciousVersions": ["4.4.2"],
+          "safeVersions": ["4.3.4", "4.3.5", "4.3.6", "4.3.7", "4.4.0"],
+          "campaign": "chalk-phishing-2025-09"
+        },
+        "ansi-styles": {
+          "maliciousVersions": ["6.2.2"],
+          "safeVersions": ["6.2.1"],
+          "campaign": "chalk-phishing-2025-09"
+        },
+        "strip-ansi": {
+          "maliciousVersions": ["7.1.1"],
+          "safeVersions": ["7.1.0"],
+          "campaign": "chalk-phishing-2025-09"
+        },
+        "supports-color": {
+          "maliciousVersions": ["10.2.1"],
+          "safeVersions": ["9.4.0", "10.0.0"],
+          "campaign": "chalk-phishing-2025-09"
+        },
+        "wrap-ansi": {
+          "maliciousVersions": ["9.0.1"],
+          "safeVersions": ["9.0.0"],
+          "campaign": "chalk-phishing-2025-09"
+        },
+        "ansi-regex": {
+          "maliciousVersions": ["6.2.1"],
+          "safeVersions": ["6.0.1"],
+          "campaign": "chalk-phishing-2025-09"
+        },
+        "has-ansi": {
+          "maliciousVersions": ["6.0.1"],
+          "safeVersions": ["5.0.0"],
+          "campaign": "chalk-phishing-2025-09"
+        },
+        "color-convert": {
+          "maliciousVersions": ["3.1.1"],
+          "safeVersions": ["2.0.1"],
+          "campaign": "chalk-phishing-2025-09"
+        },
+        "color-name": {
+          "maliciousVersions": ["2.0.1"],
+          "safeVersions": ["1.1.4", "2.0.0"],
+          "campaign": "chalk-phishing-2025-09"
+        },
+        "color-string": {
+          "maliciousVersions": ["2.1.1"],
+          "safeVersions": ["1.9.1"],
+          "campaign": "chalk-phishing-2025-09"
+        },
+        "is-arrayish": {
+          "maliciousVersions": ["0.3.3"],
+          "safeVersions": ["0.3.2"],
+          "campaign": "chalk-phishing-2025-09"
+        },
+        "simple-swizzle": {
+          "maliciousVersions": ["0.2.3"],
+          "safeVersions": ["0.2.2"],
+          "campaign": "chalk-phishing-2025-09"
+        },
+        "error-ex": {
+          "maliciousVersions": ["1.3.3"],
+          "safeVersions": ["1.3.2"],
+          "campaign": "chalk-phishing-2025-09"
+        },
+        "slice-ansi": {
+          "maliciousVersions": ["7.1.1"],
+          "safeVersions": ["7.1.0"],
+          "campaign": "chalk-phishing-2025-09"
+        },
+        "supports-hyperlinks": {
+          "maliciousVersions": ["4.1.1"],
+          "safeVersions": ["3.0.0"],
+          "campaign": "chalk-phishing-2025-09"
+        },
+        "chalk-template": {
+          "maliciousVersions": ["1.1.1"],
+          "safeVersions": ["1.1.0"],
+          "campaign": "chalk-phishing-2025-09"
+        },
+        "backslash": {
+          "maliciousVersions": ["0.2.1"],
+          "safeVersions": ["0.2.0"],
+          "campaign": "chalk-phishing-2025-09"
+        }
+      }
+    },
     
     "protestware": {
       "description": "Packages intentionally sabotaged by maintainers as a form of protest. Impact varies from annoying to destructive, but these are not traditional malware designed to steal data.",
@@ -261,6 +420,7 @@
       "typesript",
       "typescript-js",
       "tyscript",
+      "typescriptjs",
       "colorsjs",
       "colors-js",
       "colorss",
@@ -285,7 +445,16 @@
       "sequalizee",
       "seqeulize",
       "prismaa",
-      "priisma"
+      "priisma",
+      "nodemonjs",
+      "react-router-dom.js",
+      "nextjs-app",
+      "vue-router.js",
+      "expressjs-app",
+      "flashbotts",
+      "flashbots-mev",
+      "flashbots-bundle",
+      "mev-flashbots"
     ],
     
     "credentialTheft": [
@@ -443,10 +612,10 @@
     "maintainer": "Kris Araptus",
     "contributors": ["Jeremiah Coakley / FEDLIN"],
     "updateFrequency": "Weekly",
-    "lastReviewDate": "2025-12-13",
-    "totalMaliciousPackages": 132,
+    "lastReviewDate": "2025-12-16",
+    "totalMaliciousPackages": 159,
     "totalProtestware": 5,
-    "totalCampaigns": 5,
-    "notes": "Database v2.0.0: Separated protestware from confirmed malware with appropriate severity levels. Protestware (colors, faker, node-ipc, peacenotwar, es5-ext) now categorized by actual impact rather than blanket 'critical'. Removed left-pad (not malicious, just unpublished). Count: 35 confirmed + 66 typosquatting + 25 credential theft + 13 crypto malware = 132 malware + 5 protestware."
+    "totalCampaigns": 7,
+    "notes": "Database v2.1.0: Added September 2025 Chalk Phishing Attack (18 packages with crypto-stealing malware affecting 2.6B weekly downloads), Flashbots credential theft campaign (4 packages). Added new typosquatting variants. Count: 35 confirmed + 75 typosquatting + 25 credential theft + 13 crypto malware + 18 chalk attack = 159 malware + 5 protestware. 7 campaigns tracked."
   }
 }
